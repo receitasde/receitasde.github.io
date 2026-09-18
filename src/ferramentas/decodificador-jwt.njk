@@ -1,0 +1,104 @@
+---
+layout: layouts/tool.njk
+title: Decodificador de JWT
+navTitle: Decodificador de JWT
+cardText: Decodifique o cabeçalho e o payload de um token JWT e veja a data de expiração.
+description: Decodifique um JSON Web Token (JWT) para visualizar seu cabeçalho (header) e conteúdo (payload), incluindo data de emissão e expiração, sem verificar a assinatura.
+category: dev
+permalink: /ferramentas/decodificador-jwt/
+---
+<div class="widget">
+  <div class="field">
+    <label for="jwt-input">Token JWT</label>
+    <textarea id="jwt-input" style="min-height:110px;font-family:ui-monospace,monospace;font-size:.85rem" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none"></p>
+
+  <div class="field">
+    <label>Header</label>
+    <div class="output-box" id="header-output"></div>
+  </div>
+  <div class="field">
+    <label>Payload</label>
+    <div class="output-box" id="payload-output"></div>
+  </div>
+  <div class="result-line"><strong>Emitido em (iat)</strong><span id="iat-output">—</span></div>
+  <div class="result-line"><strong>Expira em (exp)</strong><span id="exp-output">—</span></div>
+  <p class="hint">A assinatura não é verificada — esta ferramenta apenas decodifica as informações contidas no token.</p>
+</div>
+
+<script>
+(function () {
+  function base64UrlDecode(str) {
+    str = str.replace(/-/g, "+").replace(/_/g, "/");
+    while (str.length % 4) str += "=";
+    var bin = atob(str);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function fmtDate(ts) {
+    if (typeof ts !== "number") return "—";
+    var d = new Date(ts * 1000);
+    return d.toLocaleString("pt-BR");
+  }
+
+  function update() {
+    var token = document.getElementById("jwt-input").value.trim();
+    var errorMsg = document.getElementById("error-msg");
+    var headerOut = document.getElementById("header-output");
+    var payloadOut = document.getElementById("payload-output");
+    errorMsg.style.display = "none";
+
+    if (!token) {
+      headerOut.textContent = "";
+      payloadOut.textContent = "";
+      document.getElementById("iat-output").textContent = "—";
+      document.getElementById("exp-output").textContent = "—";
+      return;
+    }
+
+    var parts = token.split(".");
+    if (parts.length < 2) {
+      errorMsg.textContent = "Isso não parece um JWT válido — um token tem 3 partes separadas por ponto (header.payload.assinatura).";
+      errorMsg.style.display = "block";
+      headerOut.textContent = "";
+      payloadOut.textContent = "";
+      return;
+    }
+
+    try {
+      var header = JSON.parse(base64UrlDecode(parts[0]));
+      var payload = JSON.parse(base64UrlDecode(parts[1]));
+
+      headerOut.textContent = JSON.stringify(header, null, 2);
+      payloadOut.textContent = JSON.stringify(payload, null, 2);
+      document.getElementById("iat-output").textContent = fmtDate(payload.iat);
+      document.getElementById("exp-output").textContent = fmtDate(payload.exp);
+    } catch (e) {
+      errorMsg.textContent = "Não foi possível decodificar este token — verifique se ele foi copiado corretamente.";
+      errorMsg.style.display = "block";
+      headerOut.textContent = "";
+      payloadOut.textContent = "";
+    }
+  }
+
+  document.getElementById("jwt-input").addEventListener("input", update);
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<p>Cole um token JWT completo no campo acima. O cabeçalho e o payload são decodificados automaticamente, junto com as datas de emissão e expiração, se presentes.</p>
+
+<h2 id="o-que-e-jwt">O que é um JWT</h2>
+<p>JSON Web Token (JWT) é um formato compacto para transmitir informações de forma segura entre partes, muito usado para autenticação em APIs. Um JWT é composto por três partes separadas por pontos: <strong>header</strong> (algoritmo e tipo), <strong>payload</strong> (os dados/claims, como ID do usuário e validade) e <strong>assinatura</strong> (garante que o token não foi alterado).</p>
+
+<h2 id="sobre-seguranca">Importante sobre segurança</h2>
+<p>O header e o payload de um JWT são apenas codificados em Base64URL, <strong>não criptografados</strong> — qualquer pessoa pode decodificá-los e ler o conteúdo, como esta ferramenta faz. Isso significa que você nunca deve colocar informações sensíveis (senhas, dados privados) diretamente no payload de um JWT. Esta ferramenta também <strong>não verifica a assinatura</strong> do token — ela não confirma se o token é autêntico ou se foi adulterado, apenas exibe o conteúdo decodificado.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>O token que eu colo aqui é enviado a algum servidor?</h3>
+<p>Não. A decodificação usa apenas funções nativas do navegador (<code>atob</code> e <code>JSON.parse</code>) — o token nunca sai do seu dispositivo. Ainda assim, evite colar tokens de produção reais em ferramentas online por precaução.</p>
+<h3>O que significam os campos "iat" e "exp"?</h3>
+<p><code>iat</code> (issued at) é o carimbo de data/hora (timestamp Unix) de quando o token foi emitido. <code>exp</code> (expiration) é o timestamp de quando ele expira. Ambos são opcionais e dependem de como o emissor construiu o token.</p>

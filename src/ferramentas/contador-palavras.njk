@@ -1,0 +1,80 @@
+---
+layout: layouts/tool.njk
+title: Contador de Palavras e Caracteres
+navTitle: Contador de Palavras
+cardText: Conte palavras, caracteres, frases e parágrafos, e veja o tempo estimado de leitura.
+description: Conte palavras, caracteres (com e sem espaços), frases, parágrafos e o tempo estimado de leitura de um texto, em tempo real.
+category: texto
+permalink: /ferramentas/contador-palavras/
+---
+<div class="widget">
+  <div class="field">
+    <label for="input-text">Cole ou digite seu texto</label>
+    <textarea id="input-text" placeholder="Digite ou cole seu texto aqui..." style="min-height:220px"></textarea>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box"><div class="num" id="stat-words">0</div><div class="label">Palavras</div></div>
+    <div class="stat-box"><div class="num" id="stat-chars">0</div><div class="label">Caracteres</div></div>
+    <div class="stat-box"><div class="num" id="stat-chars-ns">0</div><div class="label">Caracteres (sem espaços)</div></div>
+    <div class="stat-box"><div class="num" id="stat-sentences">0</div><div class="label">Frases</div></div>
+    <div class="stat-box"><div class="num" id="stat-paragraphs">0</div><div class="label">Parágrafos</div></div>
+    <div class="stat-box"><div class="num" id="stat-reading">0 min</div><div class="label">Tempo de leitura</div></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var el = document.getElementById("input-text");
+  var words = document.getElementById("stat-words");
+  var chars = document.getElementById("stat-chars");
+  var charsNs = document.getElementById("stat-chars-ns");
+  var sentences = document.getElementById("stat-sentences");
+  var paragraphs = document.getElementById("stat-paragraphs");
+  var reading = document.getElementById("stat-reading");
+
+  function update() {
+    var text = el.value;
+    var trimmed = text.trim();
+
+    var wordList = trimmed.length ? trimmed.split(/\s+/) : [];
+    var sentenceList = trimmed.length ? trimmed.split(/[.!?]+/).filter(function (s) { return s.trim().length > 0; }) : [];
+    var paragraphList = trimmed.length ? text.split(/\n+/).filter(function (p) { return p.trim().length > 0; }) : [];
+
+    words.textContent = wordList.length;
+    chars.textContent = text.length;
+    charsNs.textContent = text.replace(/\s+/g, "").length;
+    sentences.textContent = sentenceList.length;
+    paragraphs.textContent = paragraphList.length;
+
+    var minutes = wordList.length / 200;
+    if (minutes < 1) {
+      reading.textContent = Math.max(1, Math.ceil(minutes * 60)) + " seg";
+    } else {
+      reading.textContent = Math.ceil(minutes) + " min";
+    }
+  }
+
+  el.addEventListener("input", update);
+  update();
+})();
+</script>
+
+<h2 id="como-usar">Como usar o contador de palavras</h2>
+<ol>
+  <li>Cole ou digite o texto na caixa acima.</li>
+  <li>As estatísticas são atualizadas automaticamente, sem precisar clicar em nenhum botão.</li>
+  <li>Use o tempo de leitura estimado para ajustar o tamanho de posts, roteiros ou apresentações.</li>
+</ol>
+
+<h2 id="como-e-calculado">Como cada estatística é calculada</h2>
+<p>O número de <strong>palavras</strong> é obtido dividindo o texto por espaços em branco. <strong>Caracteres</strong> conta cada letra, número, símbolo e espaço; a versão "sem espaços" desconsidera espaços, tabulações e quebras de linha. <strong>Frases</strong> é uma aproximação baseada em pontos finais, interrogações e exclamações — abreviações com ponto (como "Dr.") podem ser contadas como frases separadas. <strong>Parágrafos</strong> considera blocos de texto separados por uma ou mais linhas em branco.</p>
+<p>O <strong>tempo de leitura</strong> usa uma média de 200 palavras por minuto, um valor comum para leitura silenciosa em português. Leitores mais rápidos ou mais lentos terão tempos reais diferentes.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Meu texto é enviado para algum servidor?</h3>
+<p>Não. A contagem acontece inteiramente no seu navegador, em JavaScript. Nada do que você digita aqui é enviado ou armazenado.</p>
+<h3>Por que a contagem de frases parece errada?</h3>
+<p>A detecção de frases é baseada em pontuação simples. Abreviações, números decimais (como "3.14") ou reticências podem afetar a contagem.</p>
+<h3>Existe limite de tamanho de texto?</h3>
+<p>Não há limite imposto pela ferramenta, mas textos muito grandes (dezenas de milhares de palavras) podem deixar a atualização em tempo real um pouco mais lenta, dependendo do seu dispositivo.</p>

@@ -1,0 +1,105 @@
+---
+layout: layouts/tool.njk
+title: Gerador de UUID
+navTitle: Gerador de UUID
+cardText: Gere identificadores únicos universais (UUID v4) em lote.
+description: Gere UUIDs (identificadores únicos universais) versão 4, aleatórios e em conformidade com o padrão RFC 4122, um ou vários de uma vez.
+category: geradores
+permalink: /ferramentas/gerador-uuid/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="quantity">Quantidade</label>
+      <input type="number" id="quantity" value="5" min="1" max="1000">
+    </div>
+    <div class="field">
+      <label class="checkbox-row" style="margin-top:30px">
+        <input type="checkbox" id="opt-uppercase">
+        <span>Maiúsculas</span>
+      </label>
+    </div>
+    <div class="field">
+      <label class="checkbox-row" style="margin-top:30px">
+        <input type="checkbox" id="opt-hyphens" checked>
+        <span>Com hifens</span>
+      </label>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="generate-btn">Gerar</button>
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar todos</button>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="output">UUIDs gerados</label>
+    <textarea id="output" style="min-height:200px" readonly></textarea>
+  </div>
+  <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+</div>
+
+<script>
+(function () {
+  function uuidv4() {
+    var bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    var hex = Array.from(bytes).map(function (b) { return b.toString(16).padStart(2, "0"); });
+    return {
+      hyphen: hex.slice(0, 4).join("") + "-" + hex.slice(4, 6).join("") + "-" + hex.slice(6, 8).join("") + "-" + hex.slice(8, 10).join("") + "-" + hex.slice(10, 16).join(""),
+      plain: hex.join(""),
+    };
+  }
+
+  function generate() {
+    var qty = Math.max(1, Math.min(1000, parseInt(document.getElementById("quantity").value, 10) || 1));
+    var hyphens = document.getElementById("opt-hyphens").checked;
+    var upper = document.getElementById("opt-uppercase").checked;
+
+    var list = [];
+    for (var i = 0; i < qty; i++) {
+      var u = uuidv4();
+      var value = hyphens ? u.hyphen : u.plain;
+      if (upper) value = value.toUpperCase();
+      list.push(value);
+    }
+    document.getElementById("output").value = list.join("\n");
+  }
+
+  document.getElementById("generate-btn").addEventListener("click", generate);
+  ["opt-uppercase", "opt-hyphens"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", generate);
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    var out = document.getElementById("output");
+    if (!out.value) return;
+    navigator.clipboard.writeText(out.value).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  });
+
+  generate();
+})();
+</script>
+
+<h2 id="o-que-e-uuid">O que é um UUID</h2>
+<p>UUID (Universally Unique Identifier) é um identificador de 128 bits usado para identificar informações de forma única, sem depender de um registro central. Esta ferramenta gera UUIDs <strong>versão 4</strong>, que são compostos majoritariamente por bits aleatórios — a chance de colisão (dois UUIDs iguais gerados por acaso) é tão baixa que é considerada desprezível na prática.</p>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Defina quantos UUIDs deseja gerar de uma vez.</li>
+  <li>Escolha se quer hifens e maiúsculas.</li>
+  <li>Clique em "Gerar" e copie a lista.</li>
+</ol>
+
+<h2 id="onde-usar">Onde UUIDs são usados</h2>
+<p>UUIDs são comuns como chaves primárias em bancos de dados distribuídos, identificadores de sessão, nomes de arquivos temporários, IDs de transação em APIs, e em qualquer situação onde múltiplos sistemas precisam gerar identificadores únicos de forma independente, sem coordenar entre si.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Dois UUIDs gerados aqui podem ser iguais?</h3>
+<p>Estatisticamente, a chance é extremamente próxima de zero — um UUID v4 tem 122 bits de aleatoriedade, gerados com uma fonte criptograficamente segura (<code>crypto.getRandomValues</code>).</p>
+<h3>Posso usar UUID como chave primária de banco de dados?</h3>
+<p>Sim, é uma prática comum, especialmente em sistemas distribuídos. Vale notar que UUIDs aleatórios podem ser menos eficientes para indexação do que IDs sequenciais em alguns bancos de dados, dependendo do volume de dados.</p>

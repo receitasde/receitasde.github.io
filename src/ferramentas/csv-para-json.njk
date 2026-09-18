@@ -1,0 +1,114 @@
+---
+layout: layouts/tool.njk
+title: Conversor de CSV para JSON
+navTitle: CSV → JSON
+cardText: Transforme uma planilha CSV em um array de objetos JSON.
+description: Converta dados CSV (separados por vírgula ou ponto e vírgula) em um array de objetos JSON, usando a primeira linha como nomes das colunas.
+category: conversao
+permalink: /ferramentas/csv-para-json/
+---
+<div class="widget">
+  <div class="field">
+    <label for="input-text">CSV de entrada (primeira linha = cabeçalho)</label>
+    <textarea id="input-text" style="min-height:180px" placeholder="nome,idade,cidade&#10;Ana,29,São Paulo&#10;Bruno,34,Curitiba"></textarea>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label for="delimiter">Separador</label>
+      <select id="delimiter">
+        <option value=",">Vírgula (,)</option>
+        <option value=";">Ponto e vírgula (;)</option>
+        <option value="\t">Tabulação</option>
+      </select>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="convert-btn">Converter</button>
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar resultado</button>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none"></p>
+  <div class="field" style="margin-top:16px">
+    <label for="output">Resultado (JSON)</label>
+    <textarea id="output" style="min-height:220px" readonly></textarea>
+  </div>
+</div>
+
+<script>
+(function () {
+  function parseCsvLine(line, delim) {
+    var result = [];
+    var cur = "";
+    var inQuotes = false;
+    for (var i = 0; i < line.length; i++) {
+      var c = line[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (line[i + 1] === '"') { cur += '"'; i++; }
+          else inQuotes = false;
+        } else cur += c;
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === delim) { result.push(cur); cur = ""; }
+        else cur += c;
+      }
+    }
+    result.push(cur);
+    return result;
+  }
+
+  document.getElementById("convert-btn").addEventListener("click", function () {
+    var errorMsg = document.getElementById("error-msg");
+    var output = document.getElementById("output");
+    errorMsg.style.display = "none";
+
+    var raw = document.getElementById("input-text").value.replace(/\r\n/g, "\n").trim();
+    if (!raw) {
+      errorMsg.textContent = "Cole algum CSV para converter.";
+      errorMsg.style.display = "block";
+      output.value = "";
+      return;
+    }
+
+    var delim = document.getElementById("delimiter").value;
+    if (delim === "\\t") delim = "\t";
+
+    var lines = raw.split("\n");
+    var headers = parseCsvLine(lines[0], delim).map(function (h) { return h.trim(); });
+
+    var rows = [];
+    for (var i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      var cols = parseCsvLine(lines[i], delim);
+      var obj = {};
+      headers.forEach(function (h, idx) {
+        obj[h] = cols[idx] !== undefined ? cols[idx].trim() : "";
+      });
+      rows.push(obj);
+    }
+
+    output.value = JSON.stringify(rows, null, 2);
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    var out = document.getElementById("output");
+    if (!out.value) return;
+    navigator.clipboard.writeText(out.value);
+  });
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Cole os dados CSV, incluindo a linha de cabeçalho com os nomes das colunas.</li>
+  <li>Escolha o separador usado (vírgula, ponto e vírgula ou tabulação).</li>
+  <li>Clique em "Converter" para gerar um array de objetos JSON, um por linha.</li>
+</ol>
+
+<h2 id="como-funciona">Como a conversão funciona</h2>
+<p>A primeira linha do CSV é usada como os nomes das propriedades de cada objeto JSON gerado. Cada linha seguinte vira um objeto, associando cada valor à coluna correspondente. A ferramenta lida corretamente com valores entre aspas que contenham o próprio separador (por exemplo, <code>"São Paulo, capital"</code> dentro de uma coluna separada por vírgula).</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Minhas planilhas do Excel/Google Sheets usam ponto e vírgula. Funciona?</h3>
+<p>Sim — isso é comum em exportações de CSV configuradas para o formato regional brasileiro. Selecione "Ponto e vírgula" no seletor de separador.</p>
+<h3>O que acontece se uma linha tiver menos colunas que o cabeçalho?</h3>
+<p>As colunas faltantes recebem uma string vazia no objeto JSON correspondente.</p>

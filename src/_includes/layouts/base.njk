@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% if title %}{{ title }} — {{ site.name }}{% else %}{{ site.name }} — Ferramentas gratuitas online{% endif %}</title>
+<meta name="description" content="{{ description or site.description }}">
+<meta name="author" content="{{ site.name }}">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{{ site.url }}{{ page.url }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{% if title %}{{ title }}{% else %}{{ site.name }}{% endif %}">
+<meta property="og:description" content="{{ description or site.description }}">
+<meta property="og:url" content="{{ site.url }}{{ page.url }}">
+<meta property="og:site_name" content="{{ site.name }}">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:image" content="{{ site.url }}/images/logo.svg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{% if title %}{{ title }}{% else %}{{ site.name }}{% endif %}">
+<meta name="twitter:description" content="{{ description or site.description }}">
+<meta name="twitter:image" content="{{ site.url }}/images/logo.svg">
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/style.css?v=1">
+{% if site.adsenseEnabled %}
+<meta name="google-adsense-account" content="{{ site.adsenseClient }}">
+{% endif %}
+{% set jsonLdWebsite = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": site.name,
+  "url": site.url + "/",
+  "description": site.description,
+  "inLanguage": "pt-BR",
+  "publisher": {
+    "@type": "Organization",
+    "name": site.name,
+    "url": site.url + "/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": site.url + "/images/logo.svg"
+    }
+  }
+} %}
+<script type="application/ld+json">{{ jsonLdWebsite | dump | safe }}</script>
+{% block head %}{% endblock %}
+</head>
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<div id="app">
+  <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle-input">
+  <div class="sidebar-mask"></div>
+
+  <aside id="sidebar">
+    <div class="sidebar-inner">
+      <a class="brand" href="/">
+        <img src="/images/logo.svg" width="22" height="22" alt="">
+        <span>{{ site.name }}</span>
+      </a>
+
+      {% for cat in categorias %}
+      <details class="nav-section" open>
+        <summary>{{ cat.nome }}</summary>
+        <nav aria-label="{{ cat.nome }}">
+          <ol>
+            {% for tool in collections.tools %}
+              {% if tool.data.category == cat.slug %}
+              <li{% if page.url == tool.url %} class="active"{% endif %}>
+                <a href="{{ tool.url }}"{% if page.url == tool.url %} aria-current="page"{% endif %}>{{ tool.data.navTitle or tool.data.title }}</a>
+              </li>
+              {% endif %}
+            {% endfor %}
+          </ol>
+        </nav>
+      </details>
+      {% endfor %}
+
+      <div class="nav-section">
+        <p class="nav-heading">Sobre o site</p>
+        <nav aria-label="Páginas institucionais">
+          <ol>
+            <li><a href="/sobre/">Sobre</a></li>
+            <li><a href="/contato/">Contato</a></li>
+            <li><a href="/privacidade/">Política de Privacidade</a></li>
+            <li><a href="/termos/">Termos de Uso</a></li>
+            <li><a href="/aviso-legal/">Aviso Legal</a></li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </aside>
+
+  <div id="content">
+    <header class="topbar">
+      <label for="sidebar-toggle" class="icon-btn" aria-label="Abrir menu">
+        <img src="/images/menu.svg" width="22" height="22" alt="">
+      </label>
+      <a class="brand mobile-brand" href="/">
+        <img src="/images/logo.svg" width="20" height="20" alt="">
+        <span>{{ site.name }}</span>
+      </a>
+    </header>
+
+    <main id="conteudo">
+      {% block content %}{{ content | safe }}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="/">
+            <img src="/images/logo.svg" width="20" height="20" alt="">
+            <span>{{ site.name }}</span>
+          </a>
+          <p>{{ site.description }}</p>
+        </div>
+        <div>
+          <p class="footer-heading">Site</p>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/sobre/">Sobre</a></li>
+            <li><a href="/contato/">Contato</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-heading">Legal</p>
+          <ul>
+            <li><a href="/privacidade/">Política de Privacidade</a></li>
+            <li><a href="/termos/">Termos de Uso</a></li>
+            <li><a href="/aviso-legal/">Aviso Legal</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="copyright">© {{ site.year }} {{ site.name }}. Todos os direitos reservados.</p>
+    </footer>
+  </div>
+</div>
+
+<div id="cookie-banner" class="cookie-banner" hidden>
+  <p>
+    Usamos cookies para analisar o tráfego do site e, quando permitido, exibir anúncios personalizados.
+    Você pode aceitar ou recusar os cookies não essenciais. Veja nossa
+    <a href="/privacidade/">Política de Privacidade</a>.
+  </p>
+  <div class="cookie-actions">
+    <button type="button" id="cookie-reject" class="btn btn-secondary">Recusar</button>
+    <button type="button" id="cookie-accept" class="btn btn-primary">Aceitar</button>
+  </div>
+</div>
+
+<script src="/js/consent.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

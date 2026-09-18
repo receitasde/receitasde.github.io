@@ -1,0 +1,102 @@
+---
+layout: layouts/tool.njk
+title: Comparador de Texto (Diff)
+navTitle: Comparador de Texto
+cardText: Compare dois textos linha a linha e veja exatamente o que mudou.
+description: Compare dois textos e veja, linha a linha, o que foi adicionado, removido ou mantido — útil para revisar documentos, código ou contratos.
+category: texto
+permalink: /ferramentas/comparador-de-texto/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="text-a">Texto original</label>
+      <textarea id="text-a" style="min-height:200px"></textarea>
+    </div>
+    <div class="field">
+      <label for="text-b">Texto novo</label>
+      <textarea id="text-b" style="min-height:200px"></textarea>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="compare-btn">Comparar</button>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label>Diferenças (por linha)</label>
+    <div class="output-box" id="diff-output"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  function diffLines(a, b) {
+    var la = a.split("\n");
+    var lb = b.split("\n");
+    var n = la.length, m = lb.length;
+    var dp = [];
+    for (var i = 0; i <= n; i++) { dp.push(new Array(m + 1).fill(0)); }
+    for (i = n - 1; i >= 0; i--) {
+      for (var j = m - 1; j >= 0; j--) {
+        dp[i][j] = la[i] === lb[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+    var result = [];
+    i = 0; j = 0;
+    while (i < n && j < m) {
+      if (la[i] === lb[j]) {
+        result.push({ type: "same", text: la[i] });
+        i++; j++;
+      } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+        result.push({ type: "removed", text: la[i] });
+        i++;
+      } else {
+        result.push({ type: "added", text: lb[j] });
+        j++;
+      }
+    }
+    while (i < n) { result.push({ type: "removed", text: la[i] }); i++; }
+    while (j < m) { result.push({ type: "added", text: lb[j] }); j++; }
+    return result;
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  document.getElementById("compare-btn").addEventListener("click", function () {
+    var a = document.getElementById("text-a").value;
+    var b = document.getElementById("text-b").value;
+    var diff = diffLines(a, b);
+    var out = document.getElementById("diff-output");
+
+    if (a === b) {
+      out.innerHTML = '<span class="success-text">Os dois textos são idênticos.</span>';
+      return;
+    }
+
+    out.innerHTML = diff.map(function (line) {
+      var prefix = line.type === "added" ? "+ " : line.type === "removed" ? "- " : "  ";
+      var color = line.type === "added" ? "#1a8f5e" : line.type === "removed" ? "#d64545" : "inherit";
+      var bg = line.type === "added" ? "rgba(26,143,94,.12)" : line.type === "removed" ? "rgba(214,69,69,.12)" : "transparent";
+      return '<div style="color:' + color + ';background:' + bg + ';padding:1px 4px">' + esc(prefix + line.text) + "</div>";
+    }).join("");
+  });
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Cole o texto original na primeira caixa e a versão nova na segunda.</li>
+  <li>Clique em "Comparar".</li>
+  <li>Linhas em <strong style="color:#1a8f5e">verde</strong> foram adicionadas, em <strong style="color:#d64545">vermelho</strong> foram removidas, e as demais permaneceram iguais.</li>
+</ol>
+
+<h2 id="como-funciona">Como a comparação funciona</h2>
+<p>Esta ferramenta compara os dois textos <strong>linha por linha</strong>, usando um algoritmo de maior subsequência comum (LCS) — a mesma ideia usada por ferramentas de controle de versão como o Git para calcular diffs. Isso significa que ela identifica quais linhas permaneceram iguais entre as duas versões, mesmo que a ordem ou a posição delas tenha mudado, e destaca apenas o que de fato foi adicionado ou removido.</p>
+<p>A comparação não analisa diferenças dentro de uma mesma linha (palavra por palavra) — se uma linha muda uma única palavra, ela aparece inteira como removida e a nova versão aparece inteira como adicionada.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Para que serve comparar textos?</h3>
+<p>É útil para revisar contratos, comparar versões de um artigo, checar mudanças em um código colado como texto, ou conferir se duas listas são idênticas.</p>
+<h3>A ferramenta diferencia maiúsculas de minúsculas e espaços?</h3>
+<p>Sim, a comparação é feita caractere por caractere dentro de cada linha, então diferenças de capitalização ou espaços extras no fim da linha contam como linhas diferentes.</p>

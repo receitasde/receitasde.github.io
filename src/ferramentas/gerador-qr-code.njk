@@ -1,0 +1,128 @@
+---
+layout: layouts/tool.njk
+title: Gerador de QR Code
+navTitle: Gerador de QR Code
+cardText: Crie QR codes a partir de texto ou links e baixe como imagem PNG.
+description: Gere um QR code a partir de um link ou texto, escolha o tamanho e o nível de correção de erro, e baixe o resultado como imagem PNG.
+category: geradores
+permalink: /ferramentas/gerador-qr-code/
+---
+<div class="widget">
+  <div class="field">
+    <label for="input-text">Texto ou URL</label>
+    <input type="text" id="input-text" value="https://exemplo.com" placeholder="https://exemplo.com">
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label for="size">Tamanho (px)</label>
+      <input type="number" id="size" value="256" min="64" max="1000" step="16">
+    </div>
+    <div class="field">
+      <label for="ec-level">Correção de erro</label>
+      <select id="ec-level">
+        <option value="L">L (~7%)</option>
+        <option value="M" selected>M (~15%)</option>
+        <option value="Q">Q (~25%)</option>
+        <option value="H">H (~30%)</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin:16px 0">
+    <div id="qr-container" style="display:inline-block;background:#fff;padding:12px;border-radius:8px"></div>
+  </div>
+
+  <div class="btn-row" style="justify-content:center">
+    <button type="button" class="btn btn-secondary" id="download-btn">Baixar PNG</button>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none;text-align:center"></p>
+</div>
+
+<script src="/js/vendor/qrcode.js"></script>
+<script src="/js/vendor/qrcode_UTF8.js"></script>
+<script>
+(function () {
+  var input = document.getElementById("input-text");
+  var sizeInput = document.getElementById("size");
+  var ecSelect = document.getElementById("ec-level");
+  var container = document.getElementById("qr-container");
+  var errorMsg = document.getElementById("error-msg");
+  var lastCanvas = null;
+
+  function render() {
+    errorMsg.style.display = "none";
+    container.innerHTML = "";
+    var text = input.value.trim();
+    if (!text) { return; }
+
+    try {
+      var qr = qrcode(0, ecSelect.value);
+      qr.addData(text);
+      qr.make();
+
+      var size = Math.max(64, Math.min(1000, parseInt(sizeInput.value, 10) || 256));
+      var count = qr.getModuleCount();
+      var cellSize = Math.floor(size / count) || 1;
+      var actualSize = cellSize * count;
+
+      var canvas = document.createElement("canvas");
+      canvas.width = actualSize;
+      canvas.height = actualSize;
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, actualSize, actualSize);
+      ctx.fillStyle = "#000000";
+
+      for (var row = 0; row < count; row++) {
+        for (var col = 0; col < count; col++) {
+          if (qr.isDark(row, col)) {
+            ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+
+      canvas.style.display = "block";
+      container.appendChild(canvas);
+      lastCanvas = canvas;
+    } catch (e) {
+      errorMsg.textContent = "Não foi possível gerar o QR code: texto muito longo para o nível de correção escolhido.";
+      errorMsg.style.display = "block";
+      lastCanvas = null;
+    }
+  }
+
+  [input, sizeInput, ecSelect].forEach(function (el) {
+    el.addEventListener("input", render);
+    el.addEventListener("change", render);
+  });
+
+  document.getElementById("download-btn").addEventListener("click", function () {
+    if (!lastCanvas) return;
+    var link = document.createElement("a");
+    link.download = "qrcode.png";
+    link.href = lastCanvas.toDataURL("image/png");
+    link.click();
+  });
+
+  render();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Digite o texto ou link que o QR code deve conter.</li>
+  <li>Ajuste o tamanho e o nível de correção de erro, se necessário.</li>
+  <li>Clique em "Baixar PNG" para salvar a imagem.</li>
+</ol>
+
+<h2 id="correcao-de-erro">Sobre o nível de correção de erro</h2>
+<p>O padrão QR Code define quatro níveis de correção de erro: <strong>L</strong> (recupera cerca de 7% de dados danificados), <strong>M</strong> (15%), <strong>Q</strong> (25%) e <strong>H</strong> (30%). Níveis mais altos tornam o código mais resistente a manchas, riscos ou uma logo sobreposta, mas exigem um código visualmente mais denso para a mesma quantidade de dados. Para uso geral, o nível M costuma ser um bom equilíbrio.</p>
+
+<h2 id="dicas">Dicas para um QR code que funciona bem impresso</h2>
+<p>Mantenha bom contraste entre o código e o fundo, evite distorcer as proporções da imagem ao redimensionar, e deixe uma margem (zona de silêncio) ao redor do código. Teste sempre o QR code com mais de um leitor antes de publicá-lo ou imprimi-lo em grande escala.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>O conteúdo do QR code é enviado a algum servidor?</h3>
+<p>Não. O QR code é gerado inteiramente no seu navegador, usando uma biblioteca JavaScript local — nenhum dado é transmitido.</p>
+<h3>Um QR code pode conter informação privada com segurança?</h3>
+<p>Não. Um QR code padrão não é criptografado — qualquer pessoa que o escaneie pode ler o conteúdo. Não coloque senhas ou dados sensíveis em um QR code que será exibido publicamente.</p>

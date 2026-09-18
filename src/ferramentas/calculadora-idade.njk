@@ -1,0 +1,121 @@
+---
+layout: layouts/tool.njk
+title: Calculadora de Idade
+navTitle: Calculadora de Idade
+cardText: Calcule idade exata em anos, meses e dias a partir da data de nascimento.
+description: Calcule a idade exata (em anos, meses e dias) a partir de uma data de nascimento, além do total de dias vividos e a data do próximo aniversário.
+category: calculadoras
+permalink: /ferramentas/calculadora-idade/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="birth-date">Data de nascimento</label>
+      <input type="text" id="birth-date" placeholder="dd/mm/aaaa">
+    </div>
+    <div class="field">
+      <label for="ref-date">Calcular idade em (opcional)</label>
+      <input type="text" id="ref-date" placeholder="dd/mm/aaaa (hoje, se vazio)">
+    </div>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none"></p>
+
+  <div class="stat-grid">
+    <div class="stat-box"><div class="num" id="stat-years">—</div><div class="label">Anos</div></div>
+    <div class="stat-box"><div class="num" id="stat-months">—</div><div class="label">Meses</div></div>
+    <div class="stat-box"><div class="num" id="stat-days">—</div><div class="label">Dias</div></div>
+    <div class="stat-box"><div class="num" id="stat-totaldays">—</div><div class="label">Total de dias vividos</div></div>
+  </div>
+  <p class="hint" id="next-birthday" style="margin-top:14px"></p>
+</div>
+
+<script>
+(function () {
+  function parseDate(str) {
+    var m = str.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return null;
+    var d = new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+    if (d.getMonth() !== parseInt(m[2], 10) - 1) return null;
+    return d;
+  }
+
+  function calc() {
+    var errorMsg = document.getElementById("error-msg");
+    errorMsg.style.display = "none";
+
+    var birthStr = document.getElementById("birth-date").value;
+    var refStr = document.getElementById("ref-date").value;
+
+    var birth = parseDate(birthStr);
+    if (!birth) {
+      ["stat-years", "stat-months", "stat-days", "stat-totaldays"].forEach(function (id) {
+        document.getElementById(id).textContent = "—";
+      });
+      document.getElementById("next-birthday").textContent = "";
+      if (birthStr.trim()) {
+        errorMsg.textContent = "Digite uma data válida no formato dd/mm/aaaa.";
+        errorMsg.style.display = "block";
+      }
+      return;
+    }
+
+    var ref = refStr.trim() ? parseDate(refStr) : new Date();
+    if (!ref) {
+      errorMsg.textContent = "A data de referência é inválida.";
+      errorMsg.style.display = "block";
+      return;
+    }
+    if (birth > ref) {
+      errorMsg.textContent = "A data de nascimento é posterior à data de referência.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    var years = ref.getFullYear() - birth.getFullYear();
+    var months = ref.getMonth() - birth.getMonth();
+    var days = ref.getDate() - birth.getDate();
+
+    if (days < 0) {
+      months--;
+      var prevMonth = new Date(ref.getFullYear(), ref.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    var totalDays = Math.floor((ref - birth) / (1000 * 60 * 60 * 24));
+
+    document.getElementById("stat-years").textContent = years;
+    document.getElementById("stat-months").textContent = months;
+    document.getElementById("stat-days").textContent = days;
+    document.getElementById("stat-totaldays").textContent = totalDays.toLocaleString("pt-BR");
+
+    var nextBirthday = new Date(ref.getFullYear(), birth.getMonth(), birth.getDate());
+    if (nextBirthday < ref) nextBirthday.setFullYear(ref.getFullYear() + 1);
+    var daysToNext = Math.ceil((nextBirthday - ref) / (1000 * 60 * 60 * 24));
+    document.getElementById("next-birthday").textContent =
+      daysToNext === 0 ? "Hoje é o aniversário! 🎉" : "Faltam " + daysToNext + " dia(s) para o próximo aniversário.";
+  }
+
+  document.getElementById("birth-date").addEventListener("input", calc);
+  document.getElementById("ref-date").addEventListener("input", calc);
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Digite a data de nascimento no formato dd/mm/aaaa.</li>
+  <li>Deixe "Calcular idade em" vazio para usar a data de hoje, ou informe outra data de referência.</li>
+  <li>Veja a idade exata em anos, meses e dias, o total de dias vividos e a contagem para o próximo aniversário.</li>
+</ol>
+
+<h2 id="como-e-calculado">Como o cálculo é feito</h2>
+<p>A ferramenta calcula a diferença completa de calendário entre as duas datas — não apenas uma subtração de anos. Isso significa que ela ajusta corretamente os meses e dias considerando que os meses têm durações diferentes (28 a 31 dias), incluindo anos bissextos.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Essa ferramenta considera anos bissextos?</h3>
+<p>Sim. O cálculo usa os objetos de data nativos do JavaScript, que já tratam corretamente fevereiro com 29 dias em anos bissextos.</p>
+<h3>Para que serve calcular idade em uma data diferente de hoje?</h3>
+<p>É útil para calcular a idade que alguém tinha (ou terá) em uma data específica — por exemplo, a idade de um candidato na data de posse de um cargo, ou a idade de uma criança no início do ano letivo.</p>

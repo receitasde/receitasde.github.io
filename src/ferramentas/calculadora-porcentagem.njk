@@ -1,0 +1,82 @@
+---
+layout: layouts/tool.njk
+title: Calculadora de Porcentagem
+navTitle: Porcentagem
+cardText: Calcule porcentagens, aumentos, descontos e variação percentual.
+description: Calcule quanto é X% de um valor, que porcentagem um número representa de outro, e a variação percentual entre dois valores.
+category: calculadoras
+permalink: /ferramentas/calculadora-porcentagem/
+---
+<div class="widget">
+  <h3>Quanto é X% de Y?</h3>
+  <div class="field-row">
+    <div class="field"><label for="p1-percent">Porcentagem (%)</label><input type="number" id="p1-percent" value="20"></div>
+    <div class="field"><label for="p1-value">Valor</label><input type="number" id="p1-value" value="150"></div>
+  </div>
+  <div class="output-box" id="p1-result"></div>
+</div>
+
+<div class="widget">
+  <h3>X é que porcentagem de Y?</h3>
+  <div class="field-row">
+    <div class="field"><label for="p2-x">Valor X</label><input type="number" id="p2-x" value="30"></div>
+    <div class="field"><label for="p2-y">Valor Y</label><input type="number" id="p2-y" value="150"></div>
+  </div>
+  <div class="output-box" id="p2-result"></div>
+</div>
+
+<div class="widget">
+  <h3>Variação percentual (de X para Y)</h3>
+  <div class="field-row">
+    <div class="field"><label for="p3-from">Valor inicial</label><input type="number" id="p3-from" value="80"></div>
+    <div class="field"><label for="p3-to">Valor final</label><input type="number" id="p3-to" value="100"></div>
+  </div>
+  <div class="output-box" id="p3-result"></div>
+</div>
+
+<script>
+(function () {
+  function fmt(n) {
+    return Number.isFinite(n) ? (Math.round(n * 100) / 100).toLocaleString("pt-BR") : "—";
+  }
+
+  function calc1() {
+    var p = parseFloat(document.getElementById("p1-percent").value);
+    var v = parseFloat(document.getElementById("p1-value").value);
+    var result = (p / 100) * v;
+    document.getElementById("p1-result").textContent = fmt(p) + "% de " + fmt(v) + " = " + fmt(result);
+  }
+  function calc2() {
+    var x = parseFloat(document.getElementById("p2-x").value);
+    var y = parseFloat(document.getElementById("p2-y").value);
+    var result = (x / y) * 100;
+    document.getElementById("p2-result").textContent = fmt(x) + " é " + fmt(result) + "% de " + fmt(y);
+  }
+  function calc3() {
+    var from = parseFloat(document.getElementById("p3-from").value);
+    var to = parseFloat(document.getElementById("p3-to").value);
+    var result = ((to - from) / from) * 100;
+    var label = result >= 0 ? "aumento" : "redução";
+    document.getElementById("p3-result").textContent = "Variação de " + fmt(Math.abs(result)) + "% (" + label + ")";
+  }
+
+  ["p1-percent", "p1-value"].forEach(function (id) { document.getElementById(id).addEventListener("input", calc1); });
+  ["p2-x", "p2-y"].forEach(function (id) { document.getElementById(id).addEventListener("input", calc2); });
+  ["p3-from", "p3-to"].forEach(function (id) { document.getElementById(id).addEventListener("input", calc3); });
+
+  calc1(); calc2(); calc3();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<p>Esta ferramenta reúne os três cálculos de porcentagem mais comuns no dia a dia. Preencha os campos de cada calculadora e o resultado aparece automaticamente.</p>
+
+<h2 id="formulas">As fórmulas usadas</h2>
+<p><strong>X% de um valor</strong>: <code>(porcentagem ÷ 100) × valor</code>. <strong>Qual porcentagem X representa de Y</strong>: <code>(X ÷ Y) × 100</code>. <strong>Variação percentual</strong> entre um valor inicial e um valor final: <code>((final − inicial) ÷ inicial) × 100</code> — um resultado positivo indica aumento, negativo indica redução.</p>
+
+<h2 id="exemplos">Exemplos práticos</h2>
+<p>Calcular um desconto de 20% em um produto de R$ 150 usa a primeira calculadora. Descobrir que fração de uma meta de vendas (R$ 150 mil) você já atingiu (R$ 30 mil) usa a segunda. Comparar o preço de um produto que subiu de R$ 80 para R$ 100 usa a terceira, mostrando um aumento de 25%.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Por que a variação percentual de queda não é simétrica ao aumento?</h3>
+<p>Porque a base de cálculo muda. Um valor que sobe de 80 para 100 tem aumento de 25%, mas um valor que cai de 100 para 80 tem redução de apenas 20% — a porcentagem é sempre calculada em relação ao valor inicial de cada caso.</p>

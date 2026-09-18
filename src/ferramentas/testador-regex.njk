@@ -1,0 +1,125 @@
+---
+layout: layouts/tool.njk
+title: Testador de Regex
+navTitle: Testador de Regex
+cardText: Teste expressões regulares em tempo real e veja as correspondências destacadas.
+description: Teste expressões regulares (regex) contra um texto de exemplo em tempo real, com destaque visual das correspondências e lista de grupos capturados.
+category: dev
+permalink: /ferramentas/testador-regex/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field" style="flex:2">
+      <label for="pattern">Expressão regular</label>
+      <input type="text" id="pattern" value="[A-Z]\w+" style="font-family:ui-monospace,monospace">
+    </div>
+    <div class="field">
+      <label for="flags">Flags</label>
+      <input type="text" id="flags" value="g" style="font-family:ui-monospace,monospace">
+    </div>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none"></p>
+  <p class="hint" id="flags-hint">g = global, i = ignorar maiúsculas/minúsculas, m = multilinha, s = ponto inclui quebras de linha</p>
+
+  <div class="field">
+    <label for="test-text">Texto de teste</label>
+    <textarea id="test-text" style="min-height:160px">Ana e Bruno visitaram São Paulo em Janeiro.</textarea>
+  </div>
+
+  <div class="field">
+    <label>Resultado (correspondências destacadas)</label>
+    <div class="output-box" id="highlighted"></div>
+  </div>
+
+  <div class="field" id="matches-field" style="margin-top:12px">
+    <label>Correspondências encontradas</label>
+    <div class="output-box" id="matches-list"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function update() {
+    var patternInput = document.getElementById("pattern");
+    var flagsInput = document.getElementById("flags");
+    var text = document.getElementById("test-text").value;
+    var errorMsg = document.getElementById("error-msg");
+    var highlighted = document.getElementById("highlighted");
+    var matchesList = document.getElementById("matches-list");
+
+    errorMsg.style.display = "none";
+
+    var pattern = patternInput.value;
+    var flags = flagsInput.value.replace(/[^gimsuy]/g, "");
+    if (flagsInput.value !== flags) flagsInput.value = flags;
+
+    if (!pattern) {
+      highlighted.innerHTML = esc(text);
+      matchesList.innerHTML = "<span class=\"hint\">Digite uma expressão regular.</span>";
+      return;
+    }
+
+    var re;
+    try {
+      re = new RegExp(pattern, flags.indexOf("g") === -1 ? flags + "g" : flags);
+    } catch (e) {
+      errorMsg.textContent = "Expressão regular inválida: " + e.message;
+      errorMsg.style.display = "block";
+      highlighted.innerHTML = esc(text);
+      matchesList.innerHTML = "";
+      return;
+    }
+
+    var lastIndex = 0;
+    var html = "";
+    var matches = [];
+    var m;
+    var guard = 0;
+    while ((m = re.exec(text)) !== null && guard < 10000) {
+      guard++;
+      html += esc(text.slice(lastIndex, m.index));
+      html += '<mark style="background:#ffe37a;padding:0 1px;border-radius:2px">' + esc(m[0] || "") + "</mark>";
+      lastIndex = m.index + (m[0].length || 1);
+      matches.push(m);
+      if (m[0].length === 0) re.lastIndex++;
+    }
+    html += esc(text.slice(lastIndex));
+    highlighted.innerHTML = html || "<span class=\"hint\">(texto vazio)</span>";
+
+    if (!matches.length) {
+      matchesList.innerHTML = "<span class=\"hint\">Nenhuma correspondência encontrada.</span>";
+    } else {
+      matchesList.innerHTML = matches.map(function (mt, i) {
+        var groups = mt.length > 1 ? " — grupos: " + mt.slice(1).map(function (g) { return g === undefined ? "(vazio)" : '"' + esc(g) + '"'; }).join(", ") : "";
+        return "#" + (i + 1) + ": \"" + esc(mt[0]) + "\" (posição " + mt.index + ")" + groups;
+      }).join("<br>");
+    }
+  }
+
+  ["pattern", "flags", "test-text"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", update);
+  });
+
+  update();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Digite sua expressão regular no primeiro campo (sem as barras <code>/ /</code>).</li>
+  <li>Ajuste as flags conforme necessário.</li>
+  <li>Cole ou edite o texto de teste — as correspondências aparecem destacadas em amarelo, com a lista detalhada abaixo.</li>
+</ol>
+
+<h2 id="flags">O que cada flag faz</h2>
+<p><code>g</code> (global) encontra todas as correspondências, não só a primeira. <code>i</code> ignora diferença entre maiúsculas e minúsculas. <code>m</code> (multilinha) faz <code>^</code> e <code>$</code> corresponderem ao início/fim de cada linha, não só do texto inteiro. <code>s</code> faz o ponto (<code>.</code>) também corresponder a quebras de linha. Esta ferramenta usa a sintaxe de regex do próprio JavaScript.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>A sintaxe de regex é igual em todas as linguagens?</h3>
+<p>Não exatamente. A maioria dos conceitos básicos (classes de caracteres, quantificadores, grupos) é parecida entre linguagens, mas há diferenças de sintaxe entre o "sabor" de regex do JavaScript, Python, PCRE (usado em PHP) e outros. Esta ferramenta testa regex no formato JavaScript.</p>
+<h3>Por que minha expressão regular não encontra nada?</h3>
+<p>Verifique se a flag <code>g</code> está ativada para encontrar múltiplas ocorrências, se há caracteres especiais que precisam de escape (como <code>.</code>, <code>*</code>, <code>(</code>) e se o padrão realmente corresponde ao formato do texto testado.</p>

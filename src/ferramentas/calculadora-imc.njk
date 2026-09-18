@@ -1,0 +1,88 @@
+---
+layout: layouts/tool.njk
+title: Calculadora de IMC
+navTitle: Calculadora de IMC
+cardText: Calcule seu Índice de Massa Corporal e veja em qual faixa ele se encaixa.
+description: Calcule o Índice de Massa Corporal (IMC) a partir do peso e da altura, e veja em qual faixa classificativa da Organização Mundial da Saúde o resultado se encaixa.
+category: calculadoras
+permalink: /ferramentas/calculadora-imc/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="weight">Peso (kg)</label>
+      <input type="number" id="weight" value="70" step="0.1">
+    </div>
+    <div class="field">
+      <label for="height">Altura (cm)</label>
+      <input type="number" id="height" value="170">
+    </div>
+  </div>
+
+  <div class="output-box" id="result" style="font-size:1.3rem;text-align:center"></div>
+  <p class="hint" id="classification" style="text-align:center"></p>
+</div>
+
+<script>
+(function () {
+  var ranges = [
+    { max: 18.5, label: "Abaixo do peso" },
+    { max: 25, label: "Peso normal" },
+    { max: 30, label: "Sobrepeso" },
+    { max: 35, label: "Obesidade grau I" },
+    { max: 40, label: "Obesidade grau II" },
+    { max: Infinity, label: "Obesidade grau III" },
+  ];
+
+  function calc() {
+    var weight = parseFloat(document.getElementById("weight").value);
+    var heightCm = parseFloat(document.getElementById("height").value);
+    var result = document.getElementById("result");
+    var classification = document.getElementById("classification");
+
+    if (!weight || !heightCm) {
+      result.textContent = "Preencha peso e altura.";
+      classification.textContent = "";
+      return;
+    }
+
+    var heightM = heightCm / 100;
+    var imc = weight / (heightM * heightM);
+
+    var label = ranges.find(function (r) { return imc < r.max; }).label;
+
+    result.textContent = "IMC: " + imc.toFixed(1);
+    classification.textContent = "Classificação (OMS): " + label;
+  }
+
+  ["weight", "height"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", calc);
+  });
+  calc();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<p>Informe seu peso em quilogramas e sua altura em centímetros. O IMC e a classificação são calculados automaticamente.</p>
+
+<h2 id="como-e-calculado">Como o IMC é calculado</h2>
+<p>O Índice de Massa Corporal é calculado pela fórmula <code>peso (kg) ÷ altura (m)²</code>. É uma medida simples, criada no século XIX, usada como triagem populacional inicial para identificar possível baixo peso, sobrepeso ou obesidade.</p>
+
+<h2 id="faixas">Faixas de classificação (OMS)</h2>
+<ul>
+  <li>Abaixo de 18,5 — Abaixo do peso</li>
+  <li>18,5 a 24,9 — Peso normal</li>
+  <li>25 a 29,9 — Sobrepeso</li>
+  <li>30 a 34,9 — Obesidade grau I</li>
+  <li>35 a 39,9 — Obesidade grau II</li>
+  <li>40 ou mais — Obesidade grau III</li>
+</ul>
+
+<h2 id="limitacoes">Limitações do IMC</h2>
+<p>O IMC não diferencia massa muscular de gordura corporal, não considera a distribuição de gordura no corpo, e pode não refletir bem a composição corporal de atletas, idosos, gestantes ou crianças. Ele é uma ferramenta de triagem populacional, não um diagnóstico individual. Consulte sempre um profissional de saúde para uma avaliação completa — veja nosso <a href="/aviso-legal/">aviso legal</a>.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>IMC alto significa necessariamente excesso de gordura?</h3>
+<p>Não necessariamente. Pessoas com alta massa muscular (como atletas) podem ter IMC elevado sem excesso de gordura corporal, já que a fórmula não diferencia os dois tipos de tecido.</p>
+<h3>Essa calculadora serve para crianças?</h3>
+<p>Não. A classificação usada aqui é a tabela padrão para adultos da OMS. Crianças e adolescentes precisam de curvas de crescimento específicas por idade e sexo.</p>

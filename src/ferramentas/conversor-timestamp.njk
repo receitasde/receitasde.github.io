@@ -1,0 +1,103 @@
+---
+layout: layouts/tool.njk
+title: Conversor de Timestamp / Epoch
+navTitle: Conversor de Timestamp
+cardText: Converta timestamp Unix (epoch) para data legível, e o contrário.
+description: Converta um timestamp Unix (epoch, em segundos ou milissegundos) para uma data legível, ou uma data para o timestamp correspondente.
+category: dev
+permalink: /ferramentas/conversor-timestamp/
+---
+<div class="widget">
+  <h3>Agora</h3>
+  <div class="result-line"><strong>Timestamp atual (segundos)</strong><span id="now-seconds"></span></div>
+  <div class="result-line"><strong>Timestamp atual (milissegundos)</strong><span id="now-millis"></span></div>
+</div>
+
+<div class="widget">
+  <h3>Timestamp → Data</h3>
+  <div class="field-row">
+    <div class="field">
+      <label for="ts-input">Timestamp</label>
+      <input type="number" id="ts-input" placeholder="1700000000">
+    </div>
+    <div class="field">
+      <label for="ts-unit">Unidade</label>
+      <select id="ts-unit">
+        <option value="s">Segundos</option>
+        <option value="ms">Milissegundos</option>
+      </select>
+    </div>
+  </div>
+  <div class="output-box" id="ts-to-date"></div>
+</div>
+
+<div class="widget">
+  <h3>Data → Timestamp</h3>
+  <div class="field">
+    <label for="date-input">Data e hora local</label>
+    <input type="datetime-local" id="date-input">
+  </div>
+  <div class="result-line"><strong>Timestamp (segundos)</strong><span id="date-to-ts-s">—</span></div>
+  <div class="result-line"><strong>Timestamp (milissegundos)</strong><span id="date-to-ts-ms">—</span></div>
+</div>
+
+<script>
+(function () {
+  function tick() {
+    var now = Date.now();
+    document.getElementById("now-seconds").textContent = Math.floor(now / 1000);
+    document.getElementById("now-millis").textContent = now;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  function updateTsToDate() {
+    var raw = document.getElementById("ts-input").value;
+    var unit = document.getElementById("ts-unit").value;
+    var out = document.getElementById("ts-to-date");
+    if (!raw) { out.textContent = ""; return; }
+    var num = parseFloat(raw);
+    var ms = unit === "s" ? num * 1000 : num;
+    var d = new Date(ms);
+    if (isNaN(d.getTime())) { out.textContent = "Timestamp inválido."; return; }
+    out.textContent = d.toLocaleString("pt-BR", { timeZoneName: "short" }) + "\nISO 8601: " + d.toISOString();
+  }
+  document.getElementById("ts-input").addEventListener("input", updateTsToDate);
+  document.getElementById("ts-unit").addEventListener("change", updateTsToDate);
+
+  function updateDateToTs() {
+    var raw = document.getElementById("date-input").value;
+    var sOut = document.getElementById("date-to-ts-s");
+    var msOut = document.getElementById("date-to-ts-ms");
+    if (!raw) { sOut.textContent = "—"; msOut.textContent = "—"; return; }
+    var d = new Date(raw);
+    if (isNaN(d.getTime())) { sOut.textContent = "—"; msOut.textContent = "—"; return; }
+    sOut.textContent = Math.floor(d.getTime() / 1000);
+    msOut.textContent = d.getTime();
+  }
+  document.getElementById("date-input").addEventListener("input", updateDateToTs);
+
+  var now = new Date();
+  now.setSeconds(0);
+  document.getElementById("date-input").value = now.toISOString().slice(0, 16);
+  updateDateToTs();
+})();
+</script>
+
+<h2 id="o-que-e-timestamp">O que é um timestamp Unix</h2>
+<p>Um timestamp Unix (também chamado epoch) conta o número de segundos (ou milissegundos) passados desde 1º de janeiro de 1970, 00:00:00 UTC. É o formato de data mais usado internamente por sistemas, bancos de dados e APIs, por ser um único número fácil de armazenar, comparar e calcular diferenças.</p>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Para converter um timestamp em data legível, cole o número na primeira calculadora e escolha se ele está em segundos ou milissegundos.</li>
+  <li>Para converter uma data em timestamp, escolha a data e hora na segunda calculadora.</li>
+</ol>
+
+<h2 id="segundos-vs-milissegundos">Segundos ou milissegundos?</h2>
+<p>APIs e linguagens de back-end (como PHP, Python, a maioria dos bancos de dados) costumam usar timestamps em <strong>segundos</strong>. O JavaScript, no navegador, costuma trabalhar internamente com <strong>milissegundos</strong> (é o que <code>Date.now()</code> retorna). Se o número tiver 10 dígitos, provavelmente está em segundos; se tiver 13 dígitos, provavelmente está em milissegundos.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>O timestamp considera meu fuso horário?</h3>
+<p>O timestamp Unix em si é sempre baseado em UTC (não depende de fuso horário). A conversão para data legível exibida aqui usa o fuso horário configurado no seu navegador/sistema operacional.</p>
+<h3>O que é o formato ISO 8601 mostrado no resultado?</h3>
+<p>É um formato de data padronizado internacionalmente (<code>AAAA-MM-DDTHH:mm:ss.sssZ</code>), amplamente usado em APIs e logs por ser não ambíguo entre diferentes países e sistemas.</p>

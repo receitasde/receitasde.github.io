@@ -1,0 +1,76 @@
+---
+layout: layouts/tool.njk
+title: Codificador e Decodificador de URL
+navTitle: URL Encode/Decode
+cardText: Codifique ou decodifique componentes de URL (percent-encoding).
+description: Codifique texto para uso seguro em URLs (percent-encoding) ou decodifique uma URL codificada de volta para texto legível.
+category: conversao
+permalink: /ferramentas/url-encode-decode/
+---
+<div class="widget">
+  <div class="field">
+    <label for="input-text">Texto ou URL</label>
+    <textarea id="input-text" style="min-height:140px" placeholder="https://exemplo.com/busca?q=texto com espaço"></textarea>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="encode-btn">Codificar</button>
+    <button type="button" class="btn btn-primary" id="decode-btn">Decodificar</button>
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar resultado</button>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="output">Resultado</label>
+    <textarea id="output" style="min-height:140px" readonly></textarea>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none"></p>
+  <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+</div>
+
+<script>
+(function () {
+  var input = document.getElementById("input-text");
+  var output = document.getElementById("output");
+  var errorMsg = document.getElementById("error-msg");
+
+  document.getElementById("encode-btn").addEventListener("click", function () {
+    errorMsg.style.display = "none";
+    output.value = encodeURIComponent(input.value);
+  });
+
+  document.getElementById("decode-btn").addEventListener("click", function () {
+    errorMsg.style.display = "none";
+    try {
+      output.value = decodeURIComponent(input.value.replace(/\+/g, "%20"));
+    } catch (e) {
+      errorMsg.textContent = "Não foi possível decodificar — a string contém uma sequência % inválida.";
+      errorMsg.style.display = "block";
+    }
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    if (!output.value) return;
+    navigator.clipboard.writeText(output.value).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  });
+})();
+</script>
+
+<h2 id="o-que-e">O que é percent-encoding</h2>
+<p>URLs só podem conter um conjunto limitado de caracteres. Espaços, acentos, símbolos como <code>&amp;</code>, <code>?</code> e <code>#</code> precisam ser convertidos para uma sequência <code>%XX</code> (onde XX é o código hexadecimal do caractere) para que a URL seja interpretada corretamente por navegadores e servidores. Esse processo é chamado de percent-encoding ou URL encoding.</p>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Para preparar um texto para ir dentro de uma URL (por exemplo, um parâmetro de busca), cole-o e clique em "Codificar".</li>
+  <li>Para entender uma URL cheia de códigos <code>%20</code>, <code>%3F</code> etc., cole-a e clique em "Decodificar".</li>
+</ol>
+
+<h2 id="exemplo">Exemplo prático</h2>
+<p>O texto <code>São Paulo &amp; Rio</code> se torna <code>S%C3%A3o%20Paulo%20%26%20Rio</code> depois de codificado — pronto para ser usado como valor de um parâmetro, como em <code>?cidade=S%C3%A3o%20Paulo%20%26%20Rio</code>, sem quebrar a estrutura da URL.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Devo codificar a URL inteira ou só uma parte?</h3>
+<p>Normalmente você codifica apenas o <strong>valor</strong> de um parâmetro (o que vem depois do <code>=</code>), não a URL inteira — caso contrário, caracteres estruturais como <code>://</code>, <code>?</code> e <code>&amp;</code> também seriam codificados e a URL deixaria de funcionar.</p>
+<h3>Qual a diferença entre codificar espaços como <code>%20</code> e como <code>+</code>?</h3>
+<p><code>%20</code> é o padrão para a parte do caminho e da query de uma URL. O <code>+</code> é uma convenção específica do formato <code>application/x-www-form-urlencoded</code>, usado em formulários HTML. Esta ferramenta decodifica ambos corretamente.</p>

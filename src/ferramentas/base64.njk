@@ -1,0 +1,94 @@
+---
+layout: layouts/tool.njk
+title: Codificador e Decodificador Base64
+navTitle: Base64
+cardText: Converta texto para Base64 e volte, direto no navegador.
+description: Codifique texto em Base64 ou decodifique uma string Base64 de volta para texto legível, incluindo suporte a caracteres acentuados (UTF-8).
+category: conversao
+permalink: /ferramentas/base64/
+---
+<div class="widget">
+  <div class="field">
+    <label for="input-text">Texto ou Base64</label>
+    <textarea id="input-text" style="min-height:160px" placeholder="Digite texto para codificar, ou cole um Base64 para decodificar..."></textarea>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="encode-btn">Codificar (texto → Base64)</button>
+    <button type="button" class="btn btn-primary" id="decode-btn">Decodificar (Base64 → texto)</button>
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar resultado</button>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="output">Resultado</label>
+    <textarea id="output" style="min-height:160px" readonly></textarea>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none"></p>
+  <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+</div>
+
+<script>
+(function () {
+  var input = document.getElementById("input-text");
+  var output = document.getElementById("output");
+  var errorMsg = document.getElementById("error-msg");
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.style.display = "block";
+  }
+  function clearError() {
+    errorMsg.style.display = "none";
+  }
+
+  document.getElementById("encode-btn").addEventListener("click", function () {
+    clearError();
+    try {
+      var bytes = new TextEncoder().encode(input.value);
+      var bin = "";
+      bytes.forEach(function (b) { bin += String.fromCharCode(b); });
+      output.value = btoa(bin);
+    } catch (e) {
+      showError("Não foi possível codificar este texto.");
+    }
+  });
+
+  document.getElementById("decode-btn").addEventListener("click", function () {
+    clearError();
+    try {
+      var bin = atob(input.value.trim());
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      output.value = new TextDecoder().decode(bytes);
+    } catch (e) {
+      showError("Base64 inválido — verifique se copiou a string completa, sem caracteres extras.");
+    }
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    if (!output.value) return;
+    navigator.clipboard.writeText(output.value).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  });
+})();
+</script>
+
+<h2 id="o-que-e-base64">O que é Base64</h2>
+<p>Base64 é um esquema de codificação que representa dados binários (ou texto) usando apenas 64 caracteres seguros para transmissão em texto: letras maiúsculas, minúsculas, números e os símbolos <code>+</code>, <code>/</code> e <code>=</code>. Ele é amplamente usado para embutir imagens em CSS/HTML, transmitir anexos em e-mails, e codificar credenciais em cabeçalhos HTTP (como o cabeçalho <code>Authorization: Basic</code>).</p>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Para codificar, digite ou cole texto normal e clique em "Codificar".</li>
+  <li>Para decodificar, cole uma string Base64 e clique em "Decodificar".</li>
+  <li>Copie o resultado com o botão "Copiar resultado".</li>
+</ol>
+
+<h2 id="importante">Importante: Base64 não é criptografia</h2>
+<p>Base64 é apenas uma forma de <strong>representação</strong> de dados, não de segurança. Qualquer pessoa pode decodificar um texto em Base64 instantaneamente — não use Base64 para proteger senhas ou informações sensíveis. Para isso, use criptografia de verdade.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Por que decodificar dá erro às vezes?</h3>
+<p>Isso acontece quando a string colada não é um Base64 válido — por exemplo, se faltarem caracteres, houver quebras de linha no meio, ou espaços extras.</p>
+<h3>A ferramenta funciona com acentos e emojis?</h3>
+<p>Sim. O texto é convertido para UTF-8 antes da codificação, então acentos, caracteres especiais e emojis são preservados corretamente ao decodificar.</p>

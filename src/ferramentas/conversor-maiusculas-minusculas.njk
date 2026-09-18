@@ -1,0 +1,118 @@
+---
+layout: layouts/tool.njk
+title: Conversor de Maiúsculas e Minúsculas
+navTitle: Maiúsculas/Minúsculas
+cardText: Transforme texto em MAIÚSCULAS, minúsculas, Título, Sentença, camelCase e mais.
+description: Converta texto entre MAIÚSCULAS, minúsculas, Cada Palavra Em Maiúscula, Primeira do parágrafo, camelCase, snake_case e kebab-case.
+category: texto
+permalink: /ferramentas/conversor-maiusculas-minusculas/
+---
+<div class="widget">
+  <div class="field">
+    <label for="input-text">Texto de entrada</label>
+    <textarea id="input-text" placeholder="Digite ou cole seu texto aqui..."></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" data-mode="upper">MAIÚSCULAS</button>
+    <button type="button" class="btn btn-primary" data-mode="lower">minúsculas</button>
+    <button type="button" class="btn btn-primary" data-mode="title">Cada Palavra</button>
+    <button type="button" class="btn btn-primary" data-mode="sentence">Sentença inicial</button>
+    <button type="button" class="btn btn-primary" data-mode="camel">camelCase</button>
+    <button type="button" class="btn btn-primary" data-mode="snake">snake_case</button>
+    <button type="button" class="btn btn-primary" data-mode="kebab">kebab-case</button>
+    <button type="button" class="btn btn-primary" data-mode="invert">iNVERTER cASO</button>
+  </div>
+
+  <div class="field" style="margin-top:16px">
+    <label for="output-text">Resultado</label>
+    <textarea id="output-text" readonly></textarea>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar resultado</button>
+  </div>
+  <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+</div>
+
+<script>
+(function () {
+  var input = document.getElementById("input-text");
+  var output = document.getElementById("output-text");
+  var buttons = document.querySelectorAll("[data-mode]");
+
+  function toTitle(str) {
+    return str.replace(/\S+/g, function (w) {
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    });
+  }
+  function toSentence(str) {
+    var lower = str.toLowerCase();
+    return lower.replace(/(^\s*\w|[.!?]\s*\w)/g, function (c) { return c.toUpperCase(); });
+  }
+  function words(str) {
+    return str
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .split(/[\s_-]+/)
+      .filter(Boolean);
+  }
+  function toCamel(str) {
+    var w = words(str).map(function (x) { return x.toLowerCase(); });
+    return w.map(function (x, i) {
+      return i === 0 ? x : x.charAt(0).toUpperCase() + x.slice(1);
+    }).join("");
+  }
+  function toSnake(str) {
+    return words(str).map(function (x) { return x.toLowerCase(); }).join("_");
+  }
+  function toKebab(str) {
+    return words(str).map(function (x) { return x.toLowerCase(); }).join("-");
+  }
+  function invertCase(str) {
+    return str.split("").map(function (c) {
+      return c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase();
+    }).join("");
+  }
+
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var text = input.value;
+      var mode = btn.getAttribute("data-mode");
+      var result = text;
+      if (mode === "upper") result = text.toUpperCase();
+      else if (mode === "lower") result = text.toLowerCase();
+      else if (mode === "title") result = toTitle(text);
+      else if (mode === "sentence") result = toSentence(text);
+      else if (mode === "camel") result = toCamel(text);
+      else if (mode === "snake") result = toSnake(text);
+      else if (mode === "kebab") result = toKebab(text);
+      else if (mode === "invert") result = invertCase(text);
+      output.value = result;
+    });
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    if (!output.value) return;
+    navigator.clipboard.writeText(output.value).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  });
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Cole o texto na primeira caixa.</li>
+  <li>Clique no formato desejado — o resultado aparece imediatamente na caixa de baixo.</li>
+  <li>Use "Copiar resultado" para colar em outro lugar.</li>
+</ol>
+
+<h2 id="quando-usar-cada-formato">Quando usar cada formato</h2>
+<p><strong>camelCase</strong> e <strong>snake_case</strong> são convenções comuns de nomes de variáveis em linguagens de programação (JavaScript costuma usar camelCase; Python e bancos de dados costumam usar snake_case). <strong>kebab-case</strong> é muito usado em URLs e nomes de arquivo. <strong>Cada Palavra</strong> (title case) é útil para títulos de artigos e cabeçalhos; note que, diferente de guias de estilo editoriais em inglês, esta ferramenta capitaliza todas as palavras igualmente, sem tratar exceções como preposições.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>A ferramenta funciona com acentos e caracteres especiais?</h3>
+<p>Sim, a conversão de maiúsculas/minúsculas usa os métodos nativos do JavaScript, que lidam corretamente com acentuação em português.</p>
+<h3>O texto é enviado para algum servidor?</h3>
+<p>Não, toda a conversão acontece localmente no seu navegador.</p>

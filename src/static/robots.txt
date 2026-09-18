@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://verefazer.com/sitemap.xml

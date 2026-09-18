@@ -1,0 +1,136 @@
+---
+layout: layouts/tool.njk
+title: Seletor de Cor e Gerador de Paleta
+navTitle: Seletor de Cor
+cardText: Escolha uma cor e gere automaticamente paletas complementares, análogas e monocromáticas.
+description: Escolha uma cor com o seletor visual e gere automaticamente paletas complementares, análogas, triádicas e monocromáticas a partir dela.
+category: cor
+permalink: /ferramentas/seletor-cor-paleta/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="color-picker">Cor base</label>
+      <input type="color" id="color-picker" value="#2f6fed" style="height:48px;padding:4px">
+    </div>
+    <div class="field">
+      <label for="hex-input">HEX</label>
+      <input type="text" id="hex-input" value="#2f6fed">
+    </div>
+  </div>
+
+  <div class="swatch" id="base-swatch"></div>
+
+  <h3 style="margin-top:24px">Complementar</h3>
+  <div class="swatch-row" id="palette-complementary"></div>
+
+  <h3>Análoga</h3>
+  <div class="swatch-row" id="palette-analogous"></div>
+
+  <h3>Triádica</h3>
+  <div class="swatch-row" id="palette-triadic"></div>
+
+  <h3>Monocromática</h3>
+  <div class="swatch-row" id="palette-mono"></div>
+</div>
+
+<script>
+(function () {
+  function hexToHsl(hex) {
+    var r = parseInt(hex.slice(1, 3), 16) / 255;
+    var g = parseInt(hex.slice(3, 5), 16) / 255;
+    var b = parseInt(hex.slice(5, 7), 16) / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h, s, l = (max + min) / 2;
+    if (max === min) { h = s = 0; }
+    else {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return [h * 360, s * 100, l * 100];
+  }
+
+  function hslToHex(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    s /= 100; l /= 100;
+    var c = (1 - Math.abs(2 * l - 1)) * s;
+    var x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    var m = l - c / 2;
+    var r, g, b;
+    if (h < 60) { r = c; g = x; b = 0; }
+    else if (h < 120) { r = x; g = c; b = 0; }
+    else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; }
+    else if (h < 300) { r = x; g = 0; b = c; }
+    else { r = c; g = 0; b = x; }
+    function toHex(v) {
+      return Math.round((v + m) * 255).toString(16).padStart(2, "0");
+    }
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+  }
+
+  function renderSwatches(container, colors) {
+    container.innerHTML = colors.map(function (c) {
+      return '<div class="swatch-item"><div class="swatch" style="background:' + c + '"></div><code>' + c + "</code></div>";
+    }).join("");
+  }
+
+  function update(hex) {
+    document.getElementById("base-swatch").style.background = hex;
+    document.getElementById("hex-input").value = hex;
+    document.getElementById("color-picker").value = hex;
+
+    var hsl = hexToHsl(hex);
+    var h = hsl[0], s = hsl[1], l = hsl[2];
+
+    renderSwatches(document.getElementById("palette-complementary"), [
+      hex, hslToHex(h + 180, s, l),
+    ]);
+    renderSwatches(document.getElementById("palette-analogous"), [
+      hslToHex(h - 30, s, l), hex, hslToHex(h + 30, s, l),
+    ]);
+    renderSwatches(document.getElementById("palette-triadic"), [
+      hex, hslToHex(h + 120, s, l), hslToHex(h + 240, s, l),
+    ]);
+    renderSwatches(document.getElementById("palette-mono"), [
+      hslToHex(h, s, Math.max(10, l - 30)),
+      hslToHex(h, s, Math.max(10, l - 15)),
+      hex,
+      hslToHex(h, s, Math.min(90, l + 15)),
+      hslToHex(h, s, Math.min(90, l + 30)),
+    ]);
+  }
+
+  document.getElementById("color-picker").addEventListener("input", function () {
+    update(this.value);
+  });
+  document.getElementById("hex-input").addEventListener("input", function () {
+    var v = this.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) update(v);
+  });
+
+  update("#2f6fed");
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Escolha uma cor usando o seletor visual ou digite um código HEX.</li>
+  <li>As paletas complementar, análoga, triádica e monocromática são geradas automaticamente.</li>
+  <li>Clique nos valores HEX de cada cor para copiá-los manualmente (selecione e copie o texto).</li>
+</ol>
+
+<h2 id="tipos-de-paleta">O que significa cada tipo de paleta</h2>
+<p><strong>Complementar</strong>: a cor oposta no círculo cromático (180° de distância) — cria alto contraste, útil para destacar elementos. <strong>Análoga</strong>: cores vizinhas no círculo cromático (30° de distância) — combinações harmoniosas, comuns em designs suaves. <strong>Triádica</strong>: três cores espaçadas igualmente (120° entre si) — equilibra contraste e harmonia. <strong>Monocromática</strong>: variações de luminosidade da mesma cor — mantém consistência visual usando apenas um matiz.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Como as paletas são calculadas?</h3>
+<p>A cor base é convertida do formato HEX para HSL (matiz, saturação, luminosidade). As paletas são geradas ajustando o matiz (para complementar, análoga e triádica) ou a luminosidade (para monocromática), depois convertendo de volta para HEX.</p>
+<h3>Essas paletas garantem bom contraste de acessibilidade?</h3>
+<p>Não necessariamente — harmonia de cor e contraste de acessibilidade (WCAG) são conceitos diferentes. Para texto sobre fundo colorido, verifique sempre a razão de contraste com uma ferramenta específica de acessibilidade antes de usar em produção.</p>

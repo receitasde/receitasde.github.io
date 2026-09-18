@@ -1,0 +1,101 @@
+---
+layout: layouts/tool.njk
+title: Formatador e Validador de JSON
+navTitle: JSON Formatter
+cardText: Formate, valide e minifique JSON, com indicação clara de erros de sintaxe.
+description: Formate JSON com indentação legível, valide a sintaxe e veja exatamente onde está o erro, ou minifique o JSON para economizar espaço.
+category: conversao
+permalink: /ferramentas/json-formatter/
+---
+<div class="widget">
+  <div class="field">
+    <label for="input-text">JSON de entrada</label>
+    <textarea id="input-text" style="min-height:220px" placeholder='{"nome": "exemplo", "valores": [1, 2, 3]}'></textarea>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label for="indent">Indentação</label>
+      <select id="indent">
+        <option value="2">2 espaços</option>
+        <option value="4">4 espaços</option>
+        <option value="tab">Tab</option>
+      </select>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="format-btn">Formatar</button>
+    <button type="button" class="btn btn-primary" id="minify-btn">Minificar</button>
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar resultado</button>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none"></p>
+  <p class="success-text" id="success-msg" style="display:none">JSON válido.</p>
+  <div class="field" style="margin-top:16px">
+    <label for="output">Resultado</label>
+    <textarea id="output" style="min-height:220px" readonly></textarea>
+  </div>
+</div>
+
+<script>
+(function () {
+  var input = document.getElementById("input-text");
+  var output = document.getElementById("output");
+  var errorMsg = document.getElementById("error-msg");
+  var successMsg = document.getElementById("success-msg");
+
+  function parseOrError() {
+    errorMsg.style.display = "none";
+    successMsg.style.display = "none";
+    try {
+      var data = JSON.parse(input.value);
+      successMsg.style.display = "block";
+      return data;
+    } catch (e) {
+      errorMsg.textContent = "JSON inválido: " + e.message;
+      errorMsg.style.display = "block";
+      return undefined;
+    }
+  }
+
+  document.getElementById("format-btn").addEventListener("click", function () {
+    var data = parseOrError();
+    if (data === undefined) { output.value = ""; return; }
+    var indentSel = document.getElementById("indent").value;
+    var indent = indentSel === "tab" ? "\t" : parseInt(indentSel, 10);
+    output.value = JSON.stringify(data, null, indent);
+  });
+
+  document.getElementById("minify-btn").addEventListener("click", function () {
+    var data = parseOrError();
+    if (data === undefined) { output.value = ""; return; }
+    output.value = JSON.stringify(data);
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    if (!output.value) return;
+    navigator.clipboard.writeText(output.value).then(function () {
+      successMsg.textContent = "Copiado!";
+      successMsg.style.display = "block";
+      setTimeout(function () { successMsg.textContent = "JSON válido."; }, 1500);
+    });
+  });
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Cole seu JSON na caixa de entrada.</li>
+  <li>Clique em "Formatar" para deixá-lo legível e indentado, ou em "Minificar" para removê-lo espaços desnecessários.</li>
+  <li>Se houver um erro de sintaxe, a mensagem indica o motivo (posição do caractere problemático).</li>
+</ol>
+
+<h2 id="erros-comuns">Erros comuns de JSON</h2>
+<p>Os erros mais frequentes ao validar JSON são: vírgulas sobrando no final de listas ou objetos (JSON não aceita vírgula depois do último item), uso de aspas simples em vez de aspas duplas, chaves sem aspas, e comentários (JSON não suporta comentários, diferente de JavaScript).</p>
+
+<h2 id="minificar-vs-formatar">Minificar vs. formatar</h2>
+<p><strong>Formatar</strong> adiciona indentação e quebras de linha para facilitar a leitura humana — ideal ao depurar ou documentar uma resposta de API. <strong>Minificar</strong> remove todos os espaços desnecessários, reduzindo o tamanho do arquivo — útil para enviar JSON pela rede ou armazená-lo de forma mais compacta.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Meus dados JSON são enviados para algum servidor?</h3>
+<p>Não. A validação e formatação usam apenas o <code>JSON.parse</code> e <code>JSON.stringify</code> nativos do navegador — nada é transmitido.</p>
+<h3>A ferramenta ordena as chaves do objeto?</h3>
+<p>Não, a ordem das chaves originais é preservada, seguindo o comportamento padrão do JavaScript.</p>

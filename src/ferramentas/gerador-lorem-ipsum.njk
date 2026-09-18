@@ -1,0 +1,127 @@
+---
+layout: layouts/tool.njk
+title: Gerador de Lorem Ipsum
+navTitle: Lorem Ipsum
+cardText: Gere parágrafos, frases ou palavras de texto de preenchimento (placeholder) em latim simulado.
+description: Gere texto de preenchimento "Lorem Ipsum" por parágrafos, frases ou palavras, para usar em protótipos de design e layout.
+category: texto
+permalink: /ferramentas/gerador-lorem-ipsum/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="unit">Gerar por</label>
+      <select id="unit">
+        <option value="paragraphs">Parágrafos</option>
+        <option value="sentences">Frases</option>
+        <option value="words">Palavras</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="amount">Quantidade</label>
+      <input type="number" id="amount" value="5" min="1" max="50">
+    </div>
+    <div class="field">
+      <label class="checkbox-row" style="margin-top:30px">
+        <input type="checkbox" id="start-classic">
+        <span>Começar com "Lorem ipsum dolor sit amet..."</span>
+      </label>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="generate-btn">Gerar texto</button>
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar</button>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="output">Resultado</label>
+    <textarea id="output" style="min-height:220px" readonly></textarea>
+  </div>
+  <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+</div>
+
+<script>
+(function () {
+  var WORDS = ("lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor " +
+    "incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud " +
+    "exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure " +
+    "in reprehenderit voluptate velit esse cillum dolore eu fugiat nulla pariatur " +
+    "excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt " +
+    "mollit anim id est laborum curabitur pretium tincidunt lacus vestibulum ante " +
+    "ipsum primis faucibus orci luctus et ultrices posuere cubilia").split(" ");
+
+  function randWord() { return WORDS[Math.floor(Math.random() * WORDS.length)]; }
+
+  function makeSentence(minW, maxW) {
+    var len = minW + Math.floor(Math.random() * (maxW - minW));
+    var w = [];
+    for (var i = 0; i < len; i++) w.push(randWord());
+    var s = w.join(" ");
+    return s.charAt(0).toUpperCase() + s.slice(1) + ".";
+  }
+
+  function makeParagraph(sentences) {
+    var s = [];
+    for (var i = 0; i < sentences; i++) s.push(makeSentence(6, 16));
+    return s.join(" ");
+  }
+
+  document.getElementById("generate-btn").addEventListener("click", function () {
+    var unit = document.getElementById("unit").value;
+    var amount = Math.max(1, Math.min(50, parseInt(document.getElementById("amount").value, 10) || 1));
+    var classic = document.getElementById("start-classic").checked;
+    var result = "";
+
+    if (unit === "words") {
+      var w = [];
+      for (var i = 0; i < amount; i++) w.push(randWord());
+      result = w.join(" ");
+      if (classic) result = "lorem ipsum dolor sit amet " + result;
+    } else if (unit === "sentences") {
+      var s = [];
+      for (i = 0; i < amount; i++) s.push(makeSentence(6, 16));
+      result = s.join(" ");
+      if (classic) result = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " + result;
+    } else {
+      var p = [];
+      for (i = 0; i < amount; i++) p.push(makeParagraph(4 + Math.floor(Math.random() * 3)));
+      if (classic && p.length) {
+        p[0] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " + p[0];
+      }
+      result = p.join("\n\n");
+    }
+
+    document.getElementById("output").value = result;
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    var out = document.getElementById("output");
+    if (!out.value) return;
+    navigator.clipboard.writeText(out.value).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  });
+
+  document.getElementById("generate-btn").click();
+})();
+</script>
+
+<h2 id="o-que-e">O que é Lorem Ipsum</h2>
+<p>Lorem Ipsum é um texto de preenchimento sem sentido, derivado de um trecho do latim clássico ("de Finibus Bonorum et Malorum", de Cícero), usado desde o século XVI por tipógrafos e, hoje, por designers e desenvolvedores para simular a distribuição de texto em um layout antes que o conteúdo final esteja pronto.</p>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Escolha se quer gerar por parágrafos, frases ou palavras.</li>
+  <li>Defina a quantidade desejada.</li>
+  <li>Clique em "Gerar texto" e copie o resultado.</li>
+</ol>
+
+<h2 id="quando-usar">Quando usar texto de preenchimento</h2>
+<p>Lorem Ipsum é útil em protótipos de design (Figma, Sketch), mockups de sites, testes de layout responsivo e templates de e-mail, quando o objetivo é validar espaçamento, tipografia e hierarquia visual antes de o conteúdo real estar disponível. Ele evita que quem avalia o design se distraia lendo o texto, já que as palavras não formam frases com sentido real.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>O texto gerado tem algum significado?</h3>
+<p>Não. As palavras são derivadas do latim clássico, mas são embaralhadas e não formam frases com sentido gramatical real.</p>
+<h3>Posso usar este texto em um site publicado?</h3>
+<p>Lorem Ipsum deve ser usado apenas como espaço reservado durante o desenvolvimento. Substitua sempre pelo conteúdo real antes de publicar a página definitiva.</p>

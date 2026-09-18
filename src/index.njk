@@ -1,0 +1,25 @@
+---
+layout: layouts/base.njk
+title: null
+description: "Mais de 30 ferramentas online gratuitas de texto, conversão, geração, cor, cálculo e desenvolvimento. Tudo roda no seu navegador."
+---
+<section class="hero">
+  <h1>{{ site.name }}</h1>
+  <p>{{ site.description }}</p>
+</section>
+
+{% for cat in categorias %}
+<section class="category-block">
+  <h2>{{ cat.nome }}</h2>
+  <div class="tool-grid">
+    {% for tool in collections.tools %}
+      {% if tool.data.category == cat.slug %}
+      <a class="tool-card" href="{{ tool.url }}">
+        <strong>{{ tool.data.navTitle or tool.data.title }}</strong>
+        <span>{{ tool.data.cardText or tool.data.description }}</span>
+      </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}

@@ -1,0 +1,91 @@
+---
+layout: layouts/tool.njk
+title: Simulador de Empréstimo e Parcelas
+navTitle: Simulador de Empréstimo
+cardText: Simule o valor da parcela de um empréstimo pelo sistema de amortização Price.
+description: Simule o valor da parcela mensal de um empréstimo ou financiamento, com base no valor, taxa de juros e número de parcelas, pelo sistema de amortização Price.
+category: calculadoras
+permalink: /ferramentas/simulador-emprestimo/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="principal">Valor do empréstimo (R$)</label>
+      <input type="number" id="principal" value="10000" step="100">
+    </div>
+    <div class="field">
+      <label for="rate">Taxa de juros mensal (%)</label>
+      <input type="number" id="rate" value="2" step="0.01">
+    </div>
+    <div class="field">
+      <label for="periods">Número de parcelas</label>
+      <input type="number" id="periods" value="12" step="1" min="1">
+    </div>
+  </div>
+
+  <div class="result-line"><strong>Valor da parcela</strong><span id="result-installment">—</span></div>
+  <div class="result-line"><strong>Total pago</strong><span id="result-total">—</span></div>
+  <div class="result-line"><strong>Total de juros</strong><span id="result-interest">—</span></div>
+</div>
+
+<script>
+(function () {
+  function fmtCurrency(n) {
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+
+  function calc() {
+    var principal = parseFloat(document.getElementById("principal").value);
+    var ratePct = parseFloat(document.getElementById("rate").value);
+    var periods = parseInt(document.getElementById("periods").value, 10);
+
+    if (!principal || !periods || ratePct == null || isNaN(ratePct)) {
+      document.getElementById("result-installment").textContent = "—";
+      document.getElementById("result-total").textContent = "—";
+      document.getElementById("result-interest").textContent = "—";
+      return;
+    }
+
+    var rate = ratePct / 100;
+    var installment;
+    if (rate === 0) {
+      installment = principal / periods;
+    } else {
+      installment = principal * (rate * Math.pow(1 + rate, periods)) / (Math.pow(1 + rate, periods) - 1);
+    }
+
+    var total = installment * periods;
+    var interest = total - principal;
+
+    document.getElementById("result-installment").textContent = fmtCurrency(installment) + " / mês";
+    document.getElementById("result-total").textContent = fmtCurrency(total);
+    document.getElementById("result-interest").textContent = fmtCurrency(interest);
+  }
+
+  ["principal", "rate", "periods"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", calc);
+  });
+  calc();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Informe o valor total do empréstimo.</li>
+  <li>Informe a taxa de juros <strong>mensal</strong> (não anual) cobrada.</li>
+  <li>Informe o número de parcelas.</li>
+</ol>
+
+<h2 id="sistema-price">Sobre o sistema de amortização usado (Price)</h2>
+<p>Esta calculadora usa a <strong>Tabela Price</strong> (também chamada de sistema francês de amortização), no qual todas as parcelas têm o mesmo valor durante todo o financiamento. A fórmula usada é:</p>
+<p><code>Parcela = Principal × [i × (1+i)^n] ÷ [(1+i)^n − 1]</code>, onde <code>i</code> é a taxa de juros por período e <code>n</code> é o número de parcelas.</p>
+<p>É o sistema mais comum em empréstimos pessoais, financiamento de veículos e boa parte dos financiamentos imobiliários no Brasil — mas não o único. Outros sistemas, como o SAC (Sistema de Amortização Constante), têm parcelas decrescentes e podem resultar em um total de juros diferente.</p>
+
+<h2 id="importante">Importante</h2>
+<p>Este é um cálculo simplificado, que não inclui taxas administrativas, seguros, IOF ou outras cobranças que instituições financeiras reais costumam adicionar. Use este simulador para ter uma estimativa, não um valor definitivo — consulte sempre a instituição financeira para as condições exatas. Veja também nosso <a href="/aviso-legal/">aviso legal</a>.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Minha proposta de empréstimo informa a taxa anual. Como converto para mensal?</h3>
+<p>A conversão não é uma simples divisão por 12, pois envolve juros compostos: <code>taxa mensal = (1 + taxa anual)^(1/12) − 1</code>. Se sua instituição informar a taxa mensal diretamente, use-a sem conversão.</p>
+<h3>Por que o total de juros parece alto?</h3>
+<p>Juros compostos ao longo de muitas parcelas podem representar uma parte significativa do valor total pago, especialmente com taxas mensais mais altas ou prazos mais longos — isso é esperado no sistema Price e não é um erro da calculadora.</p>

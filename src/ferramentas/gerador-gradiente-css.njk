@@ -1,0 +1,103 @@
+---
+layout: layouts/tool.njk
+title: Gerador de Gradiente CSS
+navTitle: Gerador de Gradiente
+cardText: Crie gradientes lineares ou radiais e copie o código CSS pronto.
+description: Crie gradientes lineares ou radiais escolhendo cores e ângulo, com pré-visualização ao vivo, e copie o código CSS pronto para usar.
+category: cor
+permalink: /ferramentas/gerador-gradiente-css/
+---
+<div class="widget">
+  <div class="swatch" id="preview" style="height:160px;margin-bottom:20px"></div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="gradient-type">Tipo</label>
+      <select id="gradient-type">
+        <option value="linear">Linear</option>
+        <option value="radial">Radial</option>
+      </select>
+    </div>
+    <div class="field" id="angle-field">
+      <label for="angle">Ângulo: <span id="angle-value">90</span>°</label>
+      <input type="range" id="angle" min="0" max="360" value="90">
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="color1">Cor 1</label>
+      <input type="color" id="color1" value="#2f6fed" style="height:44px">
+    </div>
+    <div class="field">
+      <label for="color2">Cor 2</label>
+      <input type="color" id="color2" value="#8e2de2" style="height:44px">
+    </div>
+  </div>
+
+  <div class="field" style="margin-top:12px">
+    <label for="output">CSS</label>
+    <textarea id="output" readonly style="min-height:90px"></textarea>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar CSS</button>
+  </div>
+  <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+</div>
+
+<script>
+(function () {
+  var type = document.getElementById("gradient-type");
+  var angle = document.getElementById("angle");
+  var angleField = document.getElementById("angle-field");
+  var color1 = document.getElementById("color1");
+  var color2 = document.getElementById("color2");
+  var preview = document.getElementById("preview");
+  var output = document.getElementById("output");
+
+  function update() {
+    angleField.style.display = type.value === "linear" ? "block" : "none";
+    document.getElementById("angle-value").textContent = angle.value;
+
+    var css;
+    if (type.value === "linear") {
+      css = "linear-gradient(" + angle.value + "deg, " + color1.value + ", " + color2.value + ")";
+    } else {
+      css = "radial-gradient(circle, " + color1.value + ", " + color2.value + ")";
+    }
+
+    preview.style.background = css;
+    output.value = "background: " + css + ";";
+  }
+
+  [type, angle, color1, color2].forEach(function (el) {
+    el.addEventListener("input", update);
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    navigator.clipboard.writeText(output.value).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  });
+
+  update();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Escolha entre gradiente linear ou radial.</li>
+  <li>Para gradiente linear, ajuste o ângulo com o controle deslizante.</li>
+  <li>Escolha as duas cores e copie o código CSS gerado.</li>
+</ol>
+
+<h2 id="linear-vs-radial">Gradiente linear vs. radial</h2>
+<p>Um <strong>gradiente linear</strong> transita entre cores ao longo de uma linha reta, em um ângulo que você define (0° aponta para cima, 90° para a direita). Um <strong>gradiente radial</strong> transita entre cores a partir de um ponto central, se espalhando em círculo (ou elipse) para as bordas. Gradientes lineares são mais comuns em fundos de seção e botões; gradientes radiais são úteis para simular luz ou destacar um elemento central.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>O CSS gerado funciona em todos os navegadores modernos?</h3>
+<p>Sim, a sintaxe <code>linear-gradient()</code> e <code>radial-gradient()</code> é suportada nativamente por todos os navegadores modernos, sem necessidade de prefixos.</p>
+<h3>Posso usar mais de duas cores no gradiente?</h3>
+<p>Esta ferramenta gera gradientes de duas cores para simplicidade. Você pode editar manualmente o CSS copiado para adicionar mais cores, separando-as por vírgula dentro da função de gradiente.</p>

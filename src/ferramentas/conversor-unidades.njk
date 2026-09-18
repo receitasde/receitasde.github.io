@@ -1,0 +1,172 @@
+---
+layout: layouts/tool.njk
+title: Conversor de Unidades
+navTitle: Conversor de Unidades
+cardText: Converta entre unidades de comprimento, peso, temperatura e volume.
+description: Converta valores entre unidades de comprimento, peso, temperatura e volume — metros, quilômetros, milhas, quilos, libras, Celsius, Fahrenheit, litros, galões e mais.
+category: conversao
+permalink: /ferramentas/conversor-unidades/
+---
+<div class="widget">
+  <div class="field">
+    <label for="category">Categoria</label>
+    <select id="category">
+      <option value="length">Comprimento</option>
+      <option value="weight">Peso</option>
+      <option value="temperature">Temperatura</option>
+      <option value="volume">Volume</option>
+    </select>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="value-from">Valor</label>
+      <input type="number" id="value-from" value="1">
+    </div>
+    <div class="field">
+      <label for="unit-from">De</label>
+      <select id="unit-from"></select>
+    </div>
+    <div class="field">
+      <label for="unit-to">Para</label>
+      <select id="unit-to"></select>
+    </div>
+  </div>
+
+  <div class="output-box" id="result" style="font-size:1.1rem"></div>
+</div>
+
+<script>
+(function () {
+  var UNITS = {
+    length: {
+      label: "Comprimento",
+      base: "m",
+      units: {
+        mm: { name: "Milímetros", factor: 0.001 },
+        cm: { name: "Centímetros", factor: 0.01 },
+        m: { name: "Metros", factor: 1 },
+        km: { name: "Quilômetros", factor: 1000 },
+        in: { name: "Polegadas", factor: 0.0254 },
+        ft: { name: "Pés", factor: 0.3048 },
+        yd: { name: "Jardas", factor: 0.9144 },
+        mi: { name: "Milhas", factor: 1609.344 },
+      },
+    },
+    weight: {
+      label: "Peso",
+      base: "kg",
+      units: {
+        mg: { name: "Miligramas", factor: 0.000001 },
+        g: { name: "Gramas", factor: 0.001 },
+        kg: { name: "Quilogramas", factor: 1 },
+        t: { name: "Toneladas", factor: 1000 },
+        oz: { name: "Onças", factor: 0.0283495 },
+        lb: { name: "Libras", factor: 0.453592 },
+      },
+    },
+    volume: {
+      label: "Volume",
+      base: "l",
+      units: {
+        ml: { name: "Mililitros", factor: 0.001 },
+        l: { name: "Litros", factor: 1 },
+        m3: { name: "Metros cúbicos", factor: 1000 },
+        galUS: { name: "Galões (EUA)", factor: 3.78541 },
+        floz: { name: "Onças fluidas (EUA)", factor: 0.0295735 },
+      },
+    },
+    temperature: {
+      label: "Temperatura",
+      units: {
+        c: { name: "Celsius" },
+        f: { name: "Fahrenheit" },
+        k: { name: "Kelvin" },
+      },
+    },
+  };
+
+  var categorySel = document.getElementById("category");
+  var fromSel = document.getElementById("unit-from");
+  var toSel = document.getElementById("unit-to");
+  var valueInput = document.getElementById("value-from");
+  var result = document.getElementById("result");
+
+  function fillUnits(catKey) {
+    var cat = UNITS[catKey];
+    fromSel.innerHTML = "";
+    toSel.innerHTML = "";
+    Object.keys(cat.units).forEach(function (key) {
+      var opt1 = document.createElement("option");
+      opt1.value = key;
+      opt1.textContent = cat.units[key].name;
+      fromSel.appendChild(opt1);
+
+      var opt2 = opt1.cloneNode(true);
+      toSel.appendChild(opt2);
+    });
+    var keys = Object.keys(cat.units);
+    if (keys.length > 1) toSel.value = keys[1];
+  }
+
+  function toCelsius(value, unit) {
+    if (unit === "c") return value;
+    if (unit === "f") return (value - 32) * 5 / 9;
+    if (unit === "k") return value - 273.15;
+  }
+  function fromCelsius(value, unit) {
+    if (unit === "c") return value;
+    if (unit === "f") return value * 9 / 5 + 32;
+    if (unit === "k") return value + 273.15;
+  }
+
+  function convert() {
+    var catKey = categorySel.value;
+    var cat = UNITS[catKey];
+    var value = parseFloat(valueInput.value);
+    if (isNaN(value)) { result.textContent = "Digite um número válido."; return; }
+
+    var from = fromSel.value;
+    var to = toSel.value;
+    var output;
+
+    if (catKey === "temperature") {
+      output = fromCelsius(toCelsius(value, from), to);
+    } else {
+      var baseValue = value * cat.units[from].factor;
+      output = baseValue / cat.units[to].factor;
+    }
+
+    var rounded = Math.round(output * 1e6) / 1e6;
+    result.textContent = value + " " + cat.units[from].name + " = " + rounded + " " + cat.units[to].name;
+  }
+
+  categorySel.addEventListener("change", function () {
+    fillUnits(categorySel.value);
+    convert();
+  });
+  [fromSel, toSel, valueInput].forEach(function (el) {
+    el.addEventListener("input", convert);
+    el.addEventListener("change", convert);
+  });
+
+  fillUnits(categorySel.value);
+  convert();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Escolha a categoria (comprimento, peso, temperatura ou volume).</li>
+  <li>Digite o valor e selecione as unidades de origem e destino.</li>
+  <li>O resultado é calculado automaticamente.</li>
+</ol>
+
+<h2 id="precisao">Sobre a precisão</h2>
+<p>As conversões de comprimento, peso e volume usam fatores fixos baseados no Sistema Internacional de Unidades (SI). A conversão de temperatura usa as fórmulas exatas entre Celsius, Fahrenheit e Kelvin. Resultados são arredondados para até 6 casas decimais.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Por que 1 milha não dá um número redondo em quilômetros?</h3>
+<p>Porque milhas e quilômetros pertencem a sistemas de medida diferentes (imperial e métrico) sem relação exata entre si — 1 milha equivale a 1,609344 km.</p>
+<h3>Qual a diferença entre onças (peso) e onças fluidas (volume)?</h3>
+<p>Onças (oz) medem massa/peso; onças fluidas (fl oz) medem volume de líquidos. Por isso elas aparecem em categorias diferentes nesta ferramenta.</p>

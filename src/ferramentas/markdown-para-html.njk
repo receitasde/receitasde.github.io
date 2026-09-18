@@ -1,0 +1,143 @@
+---
+layout: layouts/tool.njk
+title: Conversor de Markdown para HTML
+navTitle: Markdown → HTML
+cardText: Converta texto em Markdown para HTML, com preview ao vivo.
+description: Converta Markdown (títulos, negrito, itálico, links, listas, código) para HTML, com visualização ao vivo do resultado renderizado.
+category: conversao
+permalink: /ferramentas/markdown-para-html/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="input-text">Markdown</label>
+      <textarea id="input-text" style="min-height:260px"># Título
+
+Texto em **negrito** e em *itálico*.
+
+- item 1
+- item 2
+
+[link de exemplo](https://exemplo.com)
+
+`código em linha`</textarea>
+    </div>
+    <div class="field">
+      <label for="preview">Pré-visualização</label>
+      <div class="output-box" id="preview" style="min-height:260px"></div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar HTML</button>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="output">HTML gerado</label>
+    <textarea id="output" style="min-height:160px" readonly></textarea>
+  </div>
+  <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+</div>
+
+<script>
+(function () {
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function mdToHtml(md) {
+    var lines = md.replace(/\r\n/g, "\n").split("\n");
+    var html = [];
+    var inList = false;
+    var inCode = false;
+    var codeBuf = [];
+
+    function inlineFmt(text) {
+      text = esc(text);
+      text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+      text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      text = text.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+      text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+      return text;
+    }
+
+    lines.forEach(function (line) {
+      if (line.trim().indexOf("```") === 0) {
+        if (!inCode) { inCode = true; codeBuf = []; }
+        else {
+          html.push("<pre><code>" + esc(codeBuf.join("\n")) + "</code></pre>");
+          inCode = false;
+        }
+        return;
+      }
+      if (inCode) { codeBuf.push(line); return; }
+
+      var h = line.match(/^(#{1,6})\s+(.*)/);
+      if (h) {
+        if (inList) { html.push("</ul>"); inList = false; }
+        var level = h[1].length;
+        html.push("<h" + level + ">" + inlineFmt(h[2]) + "</h" + level + ">");
+        return;
+      }
+
+      var li = line.match(/^[-*]\s+(.*)/);
+      if (li) {
+        if (!inList) { html.push("<ul>"); inList = true; }
+        html.push("<li>" + inlineFmt(li[1]) + "</li>");
+        return;
+      }
+      if (inList) { html.push("</ul>"); inList = false; }
+
+      var bq = line.match(/^>\s?(.*)/);
+      if (bq) {
+        html.push("<blockquote>" + inlineFmt(bq[1]) + "</blockquote>");
+        return;
+      }
+
+      if (line.trim() === "") {
+        return;
+      }
+
+      html.push("<p>" + inlineFmt(line) + "</p>");
+    });
+    if (inList) html.push("</ul>");
+    return html.join("\n");
+  }
+
+  var input = document.getElementById("input-text");
+  var preview = document.getElementById("preview");
+  var output = document.getElementById("output");
+
+  function update() {
+    var html = mdToHtml(input.value);
+    preview.innerHTML = html;
+    output.value = html;
+  }
+
+  input.addEventListener("input", update);
+  update();
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    if (!output.value) return;
+    navigator.clipboard.writeText(output.value).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  });
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Digite ou cole Markdown na caixa à esquerda.</li>
+  <li>A pré-visualização e o HTML gerado são atualizados automaticamente.</li>
+  <li>Copie o HTML para usar em um site, CMS ou e-mail.</li>
+</ol>
+
+<h2 id="sintaxe-suportada">Sintaxe suportada</h2>
+<p>Esta ferramenta suporta a sintaxe Markdown mais comum: títulos (<code># a ######</code>), <strong>negrito</strong> (<code>**texto**</code>), <em>itálico</em> (<code>*texto*</code>), <code>código em linha</code> (crase simples), blocos de código (três crases), listas com marcadores (<code>-</code> ou <code>*</code>), links (<code>[texto](url)</code>) e citações (<code>&gt;</code>). Recursos mais avançados do Markdown estendido, como tabelas e listas numeradas aninhadas, não são suportados nesta versão simplificada.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Por que meu Markdown não ficou exatamente como eu esperava?</h3>
+<p>Esta é uma implementação simplificada, focada nos elementos mais usados. Para documentos complexos com tabelas, notas de rodapé ou HTML embutido, o resultado pode diferir de conversores completos como o usado pelo GitHub.</p>
+<h3>O conteúdo é enviado para algum servidor?</h3>
+<p>Não, a conversão acontece inteiramente no seu navegador.</p>

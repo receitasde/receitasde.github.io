@@ -1,0 +1,117 @@
+---
+layout: layouts/tool.njk
+title: Gerador de Números Aleatórios
+navTitle: Números Aleatórios
+cardText: Sorteie números inteiros aleatórios dentro de um intervalo, com ou sem repetição.
+description: Gere números inteiros aleatórios dentro de um intervalo escolhido, com opção de evitar repetições — útil para sorteios e amostragens.
+category: geradores
+permalink: /ferramentas/gerador-numeros-aleatorios/
+---
+<div class="widget">
+  <div class="field-row">
+    <div class="field">
+      <label for="min">Valor mínimo</label>
+      <input type="number" id="min" value="1">
+    </div>
+    <div class="field">
+      <label for="max">Valor máximo</label>
+      <input type="number" id="max" value="100">
+    </div>
+    <div class="field">
+      <label for="quantity">Quantidade</label>
+      <input type="number" id="quantity" value="1" min="1">
+    </div>
+  </div>
+  <div class="field-row">
+    <label class="checkbox-row"><input type="checkbox" id="opt-unique"><span>Sem repetição</span></label>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="generate-btn">Sortear</button>
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar</button>
+  </div>
+  <p class="error-text" id="error-msg" style="display:none"></p>
+  <div class="output-box" id="output" style="font-size:1.2rem;text-align:center;margin-top:12px"></div>
+</div>
+
+<script>
+(function () {
+  function randomInt(min, max) {
+    var range = max - min + 1;
+    var arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return min + (arr[0] % range);
+  }
+
+  document.getElementById("generate-btn").addEventListener("click", function () {
+    var errorMsg = document.getElementById("error-msg");
+    var output = document.getElementById("output");
+    errorMsg.style.display = "none";
+
+    var min = parseInt(document.getElementById("min").value, 10);
+    var max = parseInt(document.getElementById("max").value, 10);
+    var qty = parseInt(document.getElementById("quantity").value, 10);
+    var unique = document.getElementById("opt-unique").checked;
+
+    if (isNaN(min) || isNaN(max) || isNaN(qty) || qty < 1) {
+      errorMsg.textContent = "Preencha valores numéricos válidos.";
+      errorMsg.style.display = "block";
+      output.textContent = "";
+      return;
+    }
+    if (min > max) {
+      errorMsg.textContent = "O valor mínimo deve ser menor ou igual ao máximo.";
+      errorMsg.style.display = "block";
+      output.textContent = "";
+      return;
+    }
+    if (unique && qty > (max - min + 1)) {
+      errorMsg.textContent = "Não é possível sortear " + qty + " números únicos em um intervalo com apenas " + (max - min + 1) + " valores possíveis.";
+      errorMsg.style.display = "block";
+      output.textContent = "";
+      return;
+    }
+
+    var results = [];
+    if (unique) {
+      var pool = [];
+      for (var i = min; i <= max; i++) pool.push(i);
+      for (i = pool.length - 1; i > 0; i--) {
+        var j = randomInt(0, i);
+        var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+      }
+      results = pool.slice(0, qty);
+    } else {
+      for (i = 0; i < qty; i++) results.push(randomInt(min, max));
+    }
+
+    output.textContent = results.join(", ");
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    var out = document.getElementById("output");
+    if (!out.textContent) return;
+    navigator.clipboard.writeText(out.textContent);
+  });
+
+  document.getElementById("generate-btn").click();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Defina o intervalo (mínimo e máximo) e a quantidade de números.</li>
+  <li>Marque "Sem repetição" se cada número sorteado precisar ser único (como em um sorteio).</li>
+  <li>Clique em "Sortear".</li>
+</ol>
+
+<h2 id="como-funciona">Como a aleatoriedade é gerada</h2>
+<p>Os números são gerados com <code>crypto.getRandomValues()</code>, a API de aleatoriedade criptograficamente segura do navegador, em vez do <code>Math.random()</code> padrão — o que reduz vieses estatísticos sutis e torna o resultado adequado até para sorteios com apostas ou prêmios.</p>
+
+<h2 id="casos-de-uso">Casos de uso</h2>
+<p>Sorteios entre participantes (com a opção "sem repetição" para não repetir o mesmo ganhador), seleção aleatória de uma amostra de itens de uma lista numerada, geração de códigos numéricos temporários, ou simplesmente decidir algo ao acaso.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Os números incluem o valor mínimo e máximo escolhidos?</h3>
+<p>Sim, o intervalo é inclusivo dos dois lados — se você escolher de 1 a 10, tanto o 1 quanto o 10 podem ser sorteados.</p>
+<h3>Por que aparece um erro ao marcar "sem repetição"?</h3>
+<p>Isso acontece quando você pede mais números únicos do que o intervalo permite — por exemplo, pedir 20 números sem repetição entre 1 e 10 é matematicamente impossível.</p>

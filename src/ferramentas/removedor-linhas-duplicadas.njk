@@ -1,0 +1,102 @@
+---
+layout: layouts/tool.njk
+title: Removedor de Linhas Duplicadas
+navTitle: Remover Duplicadas
+cardText: Remova linhas repetidas de uma lista, com opções de ignorar maiúsculas e espaços.
+description: Remova linhas duplicadas de uma lista de texto, com opções de ignorar diferenças de maiúsculas/minúsculas, espaços extras e ordenar o resultado.
+category: texto
+permalink: /ferramentas/removedor-linhas-duplicadas/
+---
+<div class="widget">
+  <div class="field">
+    <label for="input-text">Cole sua lista (uma linha por item)</label>
+    <textarea id="input-text" style="min-height:200px" placeholder="linha 1&#10;linha 2&#10;linha 1"></textarea>
+  </div>
+
+  <div class="field-row">
+    <label class="checkbox-row"><input type="checkbox" id="opt-trim" checked><span>Remover espaços no início/fim de cada linha</span></label>
+    <label class="checkbox-row"><input type="checkbox" id="opt-case"><span>Ignorar maiúsculas/minúsculas</span></label>
+    <label class="checkbox-row"><input type="checkbox" id="opt-empty" checked><span>Remover linhas vazias</span></label>
+    <label class="checkbox-row"><input type="checkbox" id="opt-sort"><span>Ordenar alfabeticamente</span></label>
+  </div>
+
+  <div class="btn-row">
+    <button type="button" class="btn btn-primary" id="run-btn">Remover duplicadas</button>
+    <button type="button" class="btn btn-secondary" id="copy-btn">Copiar resultado</button>
+  </div>
+
+  <div class="stat-grid" id="stats" style="display:none">
+    <div class="stat-box"><div class="num" id="stat-original">0</div><div class="label">Linhas originais</div></div>
+    <div class="stat-box"><div class="num" id="stat-unique">0</div><div class="label">Linhas únicas</div></div>
+    <div class="stat-box"><div class="num" id="stat-removed">0</div><div class="label">Removidas</div></div>
+  </div>
+
+  <div class="field" style="margin-top:16px">
+    <label for="output">Resultado</label>
+    <textarea id="output" style="min-height:200px" readonly></textarea>
+  </div>
+  <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+</div>
+
+<script>
+(function () {
+  document.getElementById("run-btn").addEventListener("click", function () {
+    var raw = document.getElementById("input-text").value;
+    var trim = document.getElementById("opt-trim").checked;
+    var ignoreCase = document.getElementById("opt-case").checked;
+    var removeEmpty = document.getElementById("opt-empty").checked;
+    var sort = document.getElementById("opt-sort").checked;
+
+    var lines = raw.split(/\r?\n/);
+    if (trim) lines = lines.map(function (l) { return l.trim(); });
+    if (removeEmpty) lines = lines.filter(function (l) { return l.length > 0; });
+
+    var seen = {};
+    var result = [];
+    lines.forEach(function (line) {
+      var key = ignoreCase ? line.toLowerCase() : line;
+      if (!seen[key]) {
+        seen[key] = true;
+        result.push(line);
+      }
+    });
+
+    if (sort) result.sort(function (a, b) { return a.localeCompare(b, "pt-BR"); });
+
+    document.getElementById("output").value = result.join("\n");
+    document.getElementById("stats").style.display = "grid";
+    document.getElementById("stat-original").textContent = lines.length;
+    document.getElementById("stat-unique").textContent = result.length;
+    document.getElementById("stat-removed").textContent = lines.length - result.length;
+  });
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    var out = document.getElementById("output");
+    if (!out.value) return;
+    navigator.clipboard.writeText(out.value).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  });
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Cole sua lista, com um item por linha, na caixa de entrada.</li>
+  <li>Ajuste as opções conforme necessário.</li>
+  <li>Clique em "Remover duplicadas" para ver o resultado e as estatísticas.</li>
+</ol>
+
+<h2 id="opcoes">O que cada opção faz</h2>
+<p><strong>Ignorar maiúsculas/minúsculas</strong> trata "Maçã" e "maçã" como o mesmo item. <strong>Remover linhas vazias</strong> descarta linhas em branco do resultado. <strong>Ordenar alfabeticamente</strong> organiza o resultado final em ordem crescente, usando as regras de ordenação do português (considerando acentos corretamente).</p>
+
+<h2 id="casos-de-uso">Casos de uso comuns</h2>
+<p>Essa ferramenta é útil para limpar listas de e-mails antes de um envio, remover itens repetidos de uma lista de tarefas, consolidar palavras-chave duplicadas em uma planilha exportada como texto, ou preparar uma lista de URLs sem repetição antes de processá-la em outra ferramenta.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>A ordem original é mantida?</h3>
+<p>Sim, por padrão a primeira ocorrência de cada linha é mantida na posição em que apareceu, a menos que você marque a opção de ordenar alfabeticamente.</p>
+<h3>Isso funciona com CSV ou dados separados por vírgula?</h3>
+<p>A ferramenta compara linhas inteiras, não valores individuais dentro de uma linha. Se seu CSV tiver uma linha por registro, ela funciona normalmente; para deduplicar apenas uma coluna, exporte essa coluna isoladamente antes.</p>

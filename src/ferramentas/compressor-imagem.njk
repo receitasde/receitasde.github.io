@@ -1,0 +1,146 @@
+---
+layout: layouts/tool.njk
+title: Compressor e Redimensionador de Imagem
+navTitle: Compressor de Imagem
+cardText: Reduza o tamanho de uma imagem e/ou redimensione, direto no navegador.
+description: Comprima e redimensione imagens JPG, PNG ou WebP diretamente no navegador, ajustando qualidade e dimensões, sem enviar o arquivo a nenhum servidor.
+category: imagem
+permalink: /ferramentas/compressor-imagem/
+---
+<div class="widget">
+  <div class="field">
+    <label for="file-input">Escolha uma imagem</label>
+    <input type="file" id="file-input" accept="image/*">
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="max-width">Largura máxima (px)</label>
+      <input type="number" id="max-width" value="1600" min="16">
+    </div>
+    <div class="field">
+      <label for="quality">Qualidade: <span id="quality-value">80</span>%</label>
+      <input type="range" id="quality" min="10" max="100" value="80">
+    </div>
+    <div class="field">
+      <label for="format">Formato de saída</label>
+      <select id="format">
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/webp">WebP</option>
+        <option value="image/png">PNG</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="preview-area" style="display:none">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="num" id="stat-original-size">—</div><div class="label">Tamanho original</div></div>
+      <div class="stat-box"><div class="num" id="stat-new-size">—</div><div class="label">Novo tamanho</div></div>
+      <div class="stat-box"><div class="num" id="stat-reduction">—</div><div class="label">Redução</div></div>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <img id="preview-img" style="max-width:100%;border-radius:8px;border:1px solid var(--border)">
+    </div>
+    <div class="btn-row" style="justify-content:center;margin-top:14px">
+      <button type="button" class="btn btn-primary" id="download-btn">Baixar imagem comprimida</button>
+    </div>
+  </div>
+  <p class="hint" id="idle-msg">Escolha um arquivo de imagem para começar. O processamento acontece no seu navegador — o arquivo não é enviado a lugar nenhum.</p>
+</div>
+
+<script>
+(function () {
+  var fileInput = document.getElementById("file-input");
+  var maxWidth = document.getElementById("max-width");
+  var quality = document.getElementById("quality");
+  var format = document.getElementById("format");
+  var previewArea = document.getElementById("preview-area");
+  var idleMsg = document.getElementById("idle-msg");
+  var lastBlob = null;
+  var originalSize = 0;
+  var img = new Image();
+  var hasImage = false;
+
+  function fmtBytes(n) {
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function process() {
+    if (!hasImage) return;
+    var canvas = document.createElement("canvas");
+    var mw = parseInt(maxWidth.value, 10) || img.width;
+    var scale = Math.min(1, mw / img.width);
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    var q = format.value === "image/png" ? undefined : parseInt(quality.value, 10) / 100;
+
+    canvas.toBlob(function (blob) {
+      lastBlob = blob;
+      document.getElementById("preview-img").src = URL.createObjectURL(blob);
+      document.getElementById("stat-original-size").textContent = fmtBytes(originalSize);
+      document.getElementById("stat-new-size").textContent = fmtBytes(blob.size);
+      var reduction = originalSize > 0 ? (100 - (blob.size / originalSize) * 100) : 0;
+      document.getElementById("stat-reduction").textContent = (reduction >= 0 ? reduction.toFixed(0) : 0) + "%";
+      previewArea.style.display = "block";
+      idleMsg.style.display = "none";
+    }, format.value, q);
+  }
+
+  fileInput.addEventListener("change", function () {
+    var file = fileInput.files[0];
+    if (!file) return;
+    originalSize = file.size;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      img.onload = function () {
+        hasImage = true;
+        process();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  quality.addEventListener("input", function () {
+    document.getElementById("quality-value").textContent = quality.value;
+    process();
+  });
+  [maxWidth, format].forEach(function (el) {
+    el.addEventListener("input", process);
+    el.addEventListener("change", process);
+  });
+
+  document.getElementById("download-btn").addEventListener("click", function () {
+    if (!lastBlob) return;
+    var ext = format.value === "image/png" ? "png" : format.value === "image/webp" ? "webp" : "jpg";
+    var link = document.createElement("a");
+    link.download = "imagem-comprimida." + ext;
+    link.href = URL.createObjectURL(lastBlob);
+    link.click();
+  });
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Escolha um arquivo de imagem do seu dispositivo.</li>
+  <li>Ajuste a largura máxima, a qualidade e o formato de saída.</li>
+  <li>Compare o tamanho original com o novo tamanho e baixe o resultado.</li>
+</ol>
+
+<h2 id="como-funciona">Como a compressão funciona</h2>
+<p>A imagem é desenhada em um <code>&lt;canvas&gt;</code> do navegador, redimensionada conforme a largura máxima definida, e então recodificada no formato escolhido usando o algoritmo de codificação nativo do navegador, aplicando o nível de qualidade selecionado (para JPEG e WebP — PNG é um formato sem perdas e não usa o controle de qualidade). Tudo isso acontece localmente: a imagem nunca é enviada para um servidor.</p>
+
+<h2 id="qual-formato-usar">Qual formato escolher</h2>
+<p><strong>JPEG</strong> é ideal para fotografias, com boa compressão e compatibilidade universal. <strong>WebP</strong> costuma gerar arquivos menores que JPEG com qualidade equivalente, e é suportado por todos os navegadores modernos. <strong>PNG</strong> preserva transparência e é melhor para imagens com poucas cores ou texto nítido (como capturas de tela), mas gera arquivos maiores para fotos.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Minha imagem é enviada para algum servidor durante a compressão?</h3>
+<p>Não. Todo o processamento usa a API Canvas do navegador, localmente no seu dispositivo.</p>
+<h3>Por que a redução de tamanho às vezes é pequena ou negativa?</h3>
+<p>Se a imagem original já estiver bem comprimida, ou se você aumentar a qualidade/dimensão em vez de reduzir, o novo arquivo pode ficar do mesmo tamanho ou até maior. Ajuste a qualidade e a largura máxima para obter mais redução.</p>

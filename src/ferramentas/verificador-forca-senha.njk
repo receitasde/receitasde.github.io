@@ -1,0 +1,128 @@
+---
+layout: layouts/tool.njk
+title: Verificador de Força de Senha
+navTitle: Força de Senha
+cardText: Avalie o quão forte é uma senha e veja quanto tempo levaria para quebrá-la por força bruta.
+description: Verifique a força de uma senha com base em tamanho e variedade de caracteres, e veja uma estimativa de quanto tempo um ataque de força bruta levaria para quebrá-la.
+category: geradores
+permalink: /ferramentas/verificador-forca-senha/
+---
+<div class="widget">
+  <div class="field">
+    <label for="password-input">Digite uma senha para testar</label>
+    <input type="text" id="password-input" placeholder="Sua senha (não é enviada a lugar nenhum)" autocomplete="off">
+  </div>
+
+  <div class="field" style="margin-top:14px">
+    <div style="background:var(--code-bg);border-radius:6px;overflow:hidden;height:10px">
+      <div id="strength-bar" style="height:100%;width:0%;transition:width .2s, background .2s"></div>
+    </div>
+    <p class="hint" id="strength-label">Digite uma senha acima</p>
+  </div>
+
+  <div class="result-line"><strong>Comprimento</strong><span id="stat-length">0</span></div>
+  <div class="result-line"><strong>Tipos de caractere usados</strong><span id="stat-types">0 de 4</span></div>
+  <div class="result-line"><strong>Combinações possíveis (aprox.)</strong><span id="stat-combos">—</span></div>
+  <div class="result-line"><strong>Tempo estimado para quebrar (força bruta offline)</strong><span id="stat-time">—</span></div>
+</div>
+
+<script>
+(function () {
+  var input = document.getElementById("password-input");
+
+  function estimateCrackTime(entropy) {
+    var guessesPerSecond = 1e10; // estimativa para um ataque offline com hardware moderno
+    var combos = Math.pow(2, entropy);
+    var seconds = combos / guessesPerSecond / 2;
+
+    var units = [
+      ["século", 60 * 60 * 24 * 365 * 100],
+      ["ano", 60 * 60 * 24 * 365],
+      ["dia", 60 * 60 * 24],
+      ["hora", 60 * 60],
+      ["minuto", 60],
+      ["segundo", 1],
+    ];
+
+    if (seconds < 1) return "instantâneo";
+    for (var i = 0; i < units.length; i++) {
+      if (seconds >= units[i][1]) {
+        var value = seconds / units[i][1];
+        var rounded = value > 1000 ? value.toExponential(1) : Math.round(value);
+        return rounded + " " + units[i][0] + (rounded == 1 ? "" : "s");
+      }
+    }
+    return "instantâneo";
+  }
+
+  function evaluate() {
+    var pw = input.value;
+    var len = pw.length;
+
+    var hasLower = /[a-z]/.test(pw);
+    var hasUpper = /[A-Z]/.test(pw);
+    var hasNumber = /[0-9]/.test(pw);
+    var hasSymbol = /[^a-zA-Z0-9]/.test(pw);
+    var types = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+
+    var poolSize = 0;
+    if (hasLower) poolSize += 26;
+    if (hasUpper) poolSize += 26;
+    if (hasNumber) poolSize += 10;
+    if (hasSymbol) poolSize += 32;
+
+    var entropy = len > 0 && poolSize > 0 ? len * Math.log2(poolSize) : 0;
+
+    var bar = document.getElementById("strength-bar");
+    var label = document.getElementById("strength-label");
+
+    var score = 0;
+    if (len >= 8) score++;
+    if (len >= 12) score++;
+    if (types >= 3) score++;
+    if (types === 4) score++;
+    if (len >= 16 && types >= 3) score++;
+
+    var levels = [
+      { pct: 10, color: "#d64545", text: "Digite uma senha acima" },
+      { pct: 20, color: "#d64545", text: "Muito fraca" },
+      { pct: 40, color: "#e08a2c", text: "Fraca" },
+      { pct: 60, color: "#e0c92c", text: "Razoável" },
+      { pct: 80, color: "#7cb92c", text: "Forte" },
+      { pct: 100, color: "#1a8f5e", text: "Muito forte" },
+    ];
+    var level = len === 0 ? levels[0] : levels[Math.min(score + 1, 5)];
+
+    bar.style.width = len === 0 ? "0%" : level.pct + "%";
+    bar.style.background = level.color;
+    label.textContent = level.text;
+
+    document.getElementById("stat-length").textContent = len;
+    document.getElementById("stat-types").textContent = types + " de 4";
+    document.getElementById("stat-combos").textContent = len > 0 ? "2^" + Math.round(entropy) : "—";
+    document.getElementById("stat-time").textContent = len > 0 ? estimateCrackTime(entropy) : "—";
+  }
+
+  input.addEventListener("input", evaluate);
+  evaluate();
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Digite a senha que quer avaliar no campo acima.</li>
+  <li>A barra de força e as estatísticas são atualizadas em tempo real.</li>
+</ol>
+
+<h2 id="como-e-calculado">Como a força é calculada</h2>
+<p>A ferramenta considera o comprimento da senha e a variedade de tipos de caracteres usados (minúsculas, maiúsculas, números e símbolos) para estimar a <strong>entropia</strong> — uma medida, em bits, de quão imprevisível é a senha. A partir da entropia, estimamos quanto tempo um ataque de força bruta offline (testando todas as combinações possíveis) levaria para descobri-la, assumindo um atacante capaz de testar cerca de 10 bilhões de tentativas por segundo — uma estimativa realista para hardware especializado atual.</p>
+<p>Essa estimativa assume um ataque de <strong>força bruta pura</strong>. Na prática, senhas baseadas em palavras comuns, datas ou padrões previsíveis podem ser quebradas muito mais rápido por ataques de dicionário, mesmo tendo comprimento e variedade de caracteres razoáveis.</p>
+
+<h2 id="importante">Importante sobre privacidade</h2>
+<p>A senha que você digita aqui <strong>não é enviada a nenhum servidor</strong> — toda a análise acontece localmente no seu navegador, em JavaScript. Ainda assim, por hábito de segurança, evite testar aqui senhas que você realmente usa em contas importantes; prefira testar o padrão/estrutura da senha.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Uma senha "muito forte" aqui é impossível de quebrar?</h3>
+<p>Não existe senha impossível de quebrar, mas uma senha com entropia alta torna um ataque de força bruta puro impraticável em prazo humano. O maior risco real geralmente é reutilização de senha ou vazamento de dados do próprio serviço, não força bruta.</p>
+<h3>Por que uma senha longa mas só com letras minúsculas pode ser fraca?</h3>
+<p>Porque o conjunto de caracteres possíveis (o "alfabeto" usado) é pequeno — 26 letras. Misturar maiúsculas, números e símbolos aumenta exponencialmente o número de combinações possíveis para o mesmo comprimento.</p>

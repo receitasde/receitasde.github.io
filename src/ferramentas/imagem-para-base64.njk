@@ -1,0 +1,103 @@
+---
+layout: layouts/tool.njk
+title: Conversor de Imagem para Base64
+navTitle: Imagem → Base64
+cardText: Converta uma imagem em uma string Base64 (data URI) para embutir em HTML ou CSS.
+description: Converta uma imagem em uma string Base64 (data URI), pronta para embutir diretamente em HTML, CSS ou JSON, sem precisar hospedar o arquivo separadamente.
+category: imagem
+permalink: /ferramentas/imagem-para-base64/
+---
+<div class="widget">
+  <div class="field">
+    <label for="file-input">Escolha uma imagem</label>
+    <input type="file" id="file-input" accept="image/*">
+  </div>
+
+  <div id="result-area" style="display:none">
+    <div style="text-align:center;margin:16px 0">
+      <img id="preview-img" style="max-width:200px;max-height:200px;border-radius:8px;border:1px solid var(--border)">
+    </div>
+    <div class="result-line"><strong>Tamanho do arquivo</strong><span id="stat-size">—</span></div>
+    <div class="result-line"><strong>Tamanho da string Base64</strong><span id="stat-b64-size">—</span></div>
+
+    <div class="field" style="margin-top:14px">
+      <label for="output-datauri">Data URI completo</label>
+      <textarea id="output-datauri" style="min-height:120px" readonly></textarea>
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn btn-secondary" id="copy-datauri">Copiar Data URI</button>
+      <button type="button" class="btn btn-secondary" id="copy-css">Copiar como CSS background</button>
+      <button type="button" class="btn btn-secondary" id="copy-html">Copiar como tag &lt;img&gt;</button>
+    </div>
+    <p class="success-text" id="copy-msg" style="display:none">Copiado!</p>
+  </div>
+  <p class="hint" id="idle-msg">Escolha uma imagem para começar. O arquivo é processado localmente, no seu navegador.</p>
+</div>
+
+<script>
+(function () {
+  var fileInput = document.getElementById("file-input");
+  var resultArea = document.getElementById("result-area");
+  var idleMsg = document.getElementById("idle-msg");
+  var output = document.getElementById("output-datauri");
+  var lastDataUri = "";
+
+  function fmtBytes(n) {
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  fileInput.addEventListener("change", function () {
+    var file = fileInput.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      lastDataUri = e.target.result;
+      document.getElementById("preview-img").src = lastDataUri;
+      document.getElementById("stat-size").textContent = fmtBytes(file.size);
+      document.getElementById("stat-b64-size").textContent = fmtBytes(lastDataUri.length);
+      output.value = lastDataUri;
+      resultArea.style.display = "block";
+      idleMsg.style.display = "none";
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(function () {
+      var msg = document.getElementById("copy-msg");
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 1500);
+    });
+  }
+
+  document.getElementById("copy-datauri").addEventListener("click", function () {
+    if (lastDataUri) copyText(lastDataUri);
+  });
+  document.getElementById("copy-css").addEventListener("click", function () {
+    if (lastDataUri) copyText("background-image: url(\"" + lastDataUri + "\");");
+  });
+  document.getElementById("copy-html").addEventListener("click", function () {
+    if (lastDataUri) copyText('<img src="' + lastDataUri + '" alt="">');
+  });
+})();
+</script>
+
+<h2 id="como-usar">Como usar</h2>
+<ol>
+  <li>Escolha um arquivo de imagem.</li>
+  <li>Copie o Data URI completo, ou já formatado como propriedade CSS ou tag HTML.</li>
+</ol>
+
+<h2 id="o-que-e-data-uri">O que é um Data URI</h2>
+<p>Um Data URI embute o conteúdo de um arquivo diretamente dentro de uma URL, no formato <code>data:[tipo];base64,[dados]</code>. Isso permite usar uma imagem em HTML ou CSS sem precisar de um arquivo separado — útil para ícones pequenos, evitar requisições HTTP extras, ou embutir imagens em e-mails e documentos JSON.</p>
+
+<h2 id="quando-usar">Quando (não) usar Base64 para imagens</h2>
+<p>Embutir imagens em Base64 é útil para arquivos pequenos (ícones, logos simples), reduzindo o número de requisições de rede. Para imagens grandes, o Data URI resultante fica cerca de 33% maior que o arquivo binário original, e não se beneficia de cache de imagem separado do navegador — nesses casos, geralmente é melhor hospedar a imagem como um arquivo normal.</p>
+
+<h2 id="faq">Perguntas frequentes</h2>
+<h3>Minha imagem é enviada para algum servidor?</h3>
+<p>Não. A conversão usa a API <code>FileReader</code> do navegador, processando o arquivo inteiramente no seu dispositivo.</p>
+<h3>Por que a string Base64 é maior que o arquivo original?</h3>
+<p>Codificação Base64 representa cada 3 bytes binários como 4 caracteres de texto, o que aumenta o tamanho em aproximadamente 33%. Essa é uma característica normal da codificação, não um problema da ferramenta.</p>
