@@ -8,7 +8,7 @@ module.exports = {
   adsenseSlot: "7425818662",
   adsenseEnabled: true,
   email: "contato@verefazer.com",
-  githubRepo: "https://github.com/SEU-USUARIO/SEU-USUARIO.github.io",
+  githubRepo: "https://github.com/receitasde/receitasde.github.io",
   twitter: "",
   year: new Date().getFullYear(),
 };

@@ -4,6 +4,7 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/images");
   eleventyConfig.addPassthroughCopy({ "src/static/robots.txt": "robots.txt" });
   eleventyConfig.addPassthroughCopy({ "src/static/ads.txt": "ads.txt" });
+  eleventyConfig.addPassthroughCopy({ "src/static/CNAME": "CNAME" });
 
   eleventyConfig.addCollection("tools", function (collectionApi) {
     return collectionApi
